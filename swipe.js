@@ -121,7 +121,7 @@
 				if ( this._isValidMove() ) {
 					ev.preventDefault();
 
-					if ( this._firastMove )
+					if ( this._firstMove )
 						this._validMove = true;
 				}
 
