@@ -85,7 +85,7 @@
 			
 
 			/// Log
-			Log2.start( this._startTouch );
+			//Log2.start( this._startTouch );
 		},
 
 		/**
@@ -104,7 +104,7 @@
 			
 
 			/// Log
-			Log2.end( this._formatSwipe() );
+			//Log2.end( this._formatSwipe() );
 		},
 
 		/**
@@ -133,7 +133,7 @@
 				
 
 				/// Log
-				Log2.move( this._formatSwipe() );
+				//Log2.move( this._formatSwipe() );
 			}
 		},
 
