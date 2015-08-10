@@ -40,7 +40,7 @@
 		return this;
 	}
 
-	S.prototype = {
+	Swipe.prototype = {
 		_prepareEvents: function( eventNames ) {
 			var r = {};
 			for ( var i in eventNames )
