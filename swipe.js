@@ -1,9 +1,16 @@
-(function(factory){
-	var $ = require('jquery');
+(function(root, factory){
 
-	module.exports = factory($);
-
-})(function($){
+	if (typeof exports === 'object') {
+		module.exports = factory(require('jquery'));
+	}
+	else {
+		if (typeof root.webit == 'undefined') {
+			root.webit = {}
+		}
+		root.webit.swipe = factory(jQuery);
+	}
+	
+})(this, function($){
 	var Swipe = function(el, config) {
 		this.$el = $(el);
 
