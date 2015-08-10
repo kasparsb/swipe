@@ -9,7 +9,7 @@
 		}
 		root.webit.swipe = factory(jQuery);
 	}
-	
+
 })(this, function($){
 	var Swipe = function(el, config) {
 		this.$el = $(el);
@@ -48,10 +48,11 @@
 	}
 
 	Swipe.prototype = {
-		_prepareEvents: function( eventNames ) {
+		_prepareEvents: function(eventNames) {
 			var r = {};
-			for ( var i in eventNames )
+			for ( var i in eventNames ) {
 				r[eventNames[i]] = [];
+            }
 			return r;
 		},
 
@@ -106,49 +107,42 @@
 			}
 
 			
-			this.$el.on( 'touchstart', touchStart );
-		  	this.$el.on( 'touchmove', touchMove );
-		  	this.$el.on( 'touchend', touchEnd );
+			this.$el.on('touchstart', touchStart);
+		  	this.$el.on('touchmove', touchMove);
+		  	this.$el.on('touchend', touchEnd);
 		
-			this.$el.on( 'mousedown', mouseStart );
-			this.$el.on( 'mousemove', mouseMove );
-			this.$el.on( 'mouseup', mouseEnd );
+			this.$el.on('mousedown', mouseStart);
+			this.$el.on('mousemove', mouseMove);
+			this.$el.on('mouseup', mouseEnd);
 		},
 
 		/**
 		 * Touch start. When touch starts or when mouse down
 		 */
 		_start: function( ev ) {
-			this._startTouch = this._getTouch( ev );
+			this._startTouch = this._getTouch(ev);
 			this._firstMove = true;
 			this._validMove = false;
 
-			this._fire( "start", [ this._startTouch ] );
-
-			
-
-			/// Log
-			//Log2.start( this._startTouch );
+			this._fire("start", [this._startTouch]);
 		},
 
 		/**
 		 * Touch ends
 		 */
 		_end: function( ev ) {
-			this._currentTouch = this._getTouch( ev );
+			this._currentTouch = this._getTouch(ev);
 
 			this._trackMovment();
 
 			this._startTouch = false;
 
-			if ( this._validMove )
-			 	this._fire( "end", [ this._formatSwipe() ] );
+			if ( this._validMove ) {
+			 	this._fire("end", [this._formatSwipe()]);
+             }
 
 			// Vienmēr izpildām touchend eventu
-			this._fire( "touchend", [ this._formatSwipe() ] );				
-
-			/// Log
-			//Log2.end( this._formatSwipe() );
+			this._fire("touchend", [this._formatSwipe()]);
 		},
 
 		/**
@@ -158,7 +152,7 @@
 			// Check for _startTouch when fired mousemove event
 			if ( this._startTouch ) {
 
-				this._currentTouch = this._getTouch( ev );
+				this._currentTouch = this._getTouch(ev);
 
 				this._trackMovment();
 
@@ -168,25 +162,15 @@
 				if ( this._isValidMove() ) {
 					ev.preventDefault();
 					this._validMove = true;
-
-					console.log('validmove');
 				}
-
-				// if ( this._firstMove ) {
-				// 	this._validMove = true;
-				// }
 
 				if ( this._firstMove ) {
 					this._firstMove = false;
 				}
 				
 				if ( this._validMove ) {
-					this._fire( "move", [ this._formatSwipe() ] )
+					this._fire("move", [ this._formatSwipe() ])
 				}
-				
-
-				/// Log
-				//Log2.move( this._formatSwipe() );
 			}
 		},
 
@@ -257,8 +241,8 @@
 				x: this._currentTouch.x - this._startTouch.x,
 				y: this._currentTouch.y - this._startTouch.y
 			};
-			this.width = Math.abs( this.offset.x );
-			this.height = Math.abs( this.offset.y );
+			this.width = Math.abs(this.offset.x);
+			this.height = Math.abs(this.offset.y);
 			this.duration = this._currentTouch.t - this._startTouch.t;
 			this.direction = this._getDirection()
 		},
@@ -274,37 +258,43 @@
 			 */
 			var e = this.offset.y / this.offset.x;
 
-			if ( e > this._slopeFactor )
+			if (e > this._slopeFactor) {
 				return "up";
-			else if ( e < -this._slopeFactor )
+            }
+			else if (e < -this._slopeFactor) {
 				return "down";
-			else if ( this._currentTouch.x >= this._startTouch.x )
+            }
+			else if (this._currentTouch.x >= this._startTouch.x) {
 				return "right";
-			else if ( this._currentTouch.x < this._startTouch.x )
+            }
+			else if (this._currentTouch.x < this._startTouch.x) {
 				return "left";
+            }
 		},
 
 		/**
 		 * Get touch object from event
 		 * We nned only x, y coordinates and time of touch
 		 */
-		_getTouch: function ( ev ) {
-			if ( ev.originalEvent )
+		_getTouch: function (ev) {
+			if ( ev.originalEvent ) {
 	  			ev = ev.originalEvent;
+            }
 
 	  		var t = false;
 	  		var changedTouches = ev.changedTouches;
 
 	  		if ( changedTouches ) {
 	  			// Allow only defined number of touches
-	  			if ( changedTouches.length == this._touchesCount )
+	  			if (changedTouches.length == this._touchesCount) {
 	  				t = changedTouches[0];
+                }
 	  		}
 	  		else {
 	  			t = ev;
 	  		}
 	  		
-		  	return t ? this._formatTouch( t ) : false;
+		  	return t ? this._formatTouch(t) : false;
 		},
 
 		_formatTouch: function(ev) {
@@ -319,8 +309,9 @@
 		 * Fire events attached callbacks
 		 */
 		_fire: function( eventName, args ) {
-			for ( var i in this._events[eventName] )
-				this._events[eventName][i].apply( this, args );
+			for ( var i in this._events[eventName] ) {
+				this._events[eventName][i].apply(this, args);
+            }
 		},
 
 		/**
@@ -330,25 +321,19 @@
 		_fireTouchMove: function() {
 			var t = this._formatSwipe();
 			if (t.width > 0 || t.height > 0) {
-				this._fire( "touchmove", [t] );	
+				this._fire("touchmove", [t]);
 			}
 		},
 
 		/**
 		 * Add event listener
 		 */
-		on: function( eventName, cb ) {
-			if ( typeof this._events[eventName] == "object" )
+		on: function(eventName, cb) {
+			if ( typeof this._events[eventName] == "object" ) {
 				this._events[eventName].push( cb );
+            }
 
 			return this;
-		},
-
-		data: function( d ) {
-			if ( typeof d == "undefined" )
-				return this._data;
-			else
-				this._data = d;
 		}
 	}
 
