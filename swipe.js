@@ -106,14 +106,14 @@
 				}
 			}
 
-			
-			this.$el.on('touchstart', touchStart);
-		  	this.$el.on('touchmove', touchMove);
-		  	this.$el.on('touchend', touchEnd);
+			// Set events with custom namespace
+			this.$el.on('touchstart.webitswipe', touchStart);
+		  	this.$el.on('touchmove.webitswipe', touchMove);
+		  	this.$el.on('touchend.webitswipe', touchEnd);
 		
-			this.$el.on('mousedown', mouseStart);
-			this.$el.on('mousemove', mouseMove);
-			this.$el.on('mouseup', mouseEnd);
+			this.$el.on('mousedown.webitswipe', mouseStart);
+			this.$el.on('mousemove.webitswipe', mouseMove);
+			this.$el.on('mouseup.webitswipe', mouseEnd);
 		},
 
 		/**
@@ -229,7 +229,7 @@
 			return (this.direction == "left" || this.direction == "right");
 		},
 
-		isVertical: function() {
+		_isVertical: function() {
 			return (this.direction == "up" || this.direction == "down");
 		},
 
@@ -334,7 +334,16 @@
             }
 
 			return this;
-		}
+		},
+
+        /**
+         * Destroy swipe monitoring
+         */
+        destroy: function() {
+            // Remove all event listeners
+            this.$el.off('.webitswipe');
+            this.events = [];
+        }
 	}
 
 	return Swipe;
