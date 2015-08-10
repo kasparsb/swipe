@@ -13,8 +13,6 @@ var S = function( $el, config ) {
 	this._touchesCount = 1;
 	// Slope factor to distinguise vertical swipe from horizontal
 	this._slopeFactor = 1;
-	// Duration for valid swipe
-	this._swipeDuration = 100;
 	// First touch when touch start occures
 	this._startTouch = false;
 	// Current touch, when swipe is in process
@@ -191,8 +189,6 @@ S.prototype = {
 			x: this._currentTouch.x,
 			y: this._currentTouch.y,
 
-
-			isswipe: this.duration >= this._swipeDuration,
 			speed: this.width / this.duration
 		}
 	},
@@ -204,40 +200,42 @@ S.prototype = {
 	 * There also can be checked, if user is scrolling page
 	 */
 	_isValidMove: function () {
-		if ( this._config && this._config.dir ) {
-			if ( this._config.dir == "horizontal" ) {
-				if (this.direction == "left" || this.direction == "right") {
-					// Pārbaudām vai ir minWidth
-					if (typeof this._config.minWidth != 'undefined') {
-						console.log('_isValidMove', this.width, this._config.minWidth);
-						if (this.width < this._config.minWidth) {
-							return false;
-						}
-					}
+		var valid = true;
 
-					return true;
+		// If there is config, start to validate swipe by provided configuration
+		if (this._config) {
+			// Swipe direction
+			if (this._config.dir) {
+				if (this._config.dir == 'horizontal' && !this._isHorizontal()) {
+					return false;
 				}
-
-				return false;
+				else if (this._config.dir == 'vertical' && !this._isVertical()) {
+					return false;
+				}
 			}
-			else if ( this._config.dir == "vertical" ) {
-				if (this.direction == "up" || this.direction == "down") {
-					// Pārbaudām vai ir minHeight
-					if (typeof this._config.minHeight != 'undefined') {
-						if (this.height < this._config.minHeight) {
-							return false;
-						}
-					}
 
-					return true;
+			// Min width/height
+			if (typeof this._config.minWidth != 'undefined' && this._isHorizontal()) {
+				if (this.width < this._config.minWidth) {
+					return false;
 				}
-
-				return false;
+			}
+			else if (typeof this._config.minHeight != 'undefined' && this._isVertical()) {
+				if (this.height < this._config.minHeight) {
+					return false;
+				}
 			}
 		}
-		else {
-			return true;
-		}
+
+		return true;
+	},
+
+	_isHorizontal: function() {
+		return (this.direction == "left" || this.direction == "right");
+	},
+
+	isVertical: function() {
+		return (this.direction == "up" || this.direction == "down");
 	},
 
 	/**
