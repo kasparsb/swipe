@@ -120,7 +120,7 @@
 		/**
 		 * Touch start. When touch starts or when mouse down
 		 */
-		_start: function( ev ) {
+		_start: function(ev) {
 			this._startTouch = this._getTouch(ev);
 			this._firstMove = true;
 			this._validMove = false;
@@ -131,7 +131,7 @@
 		/**
 		 * Touch ends
 		 */
-		_end: function( ev ) {
+		_end: function(ev) {
 			this._currentTouch = this._getTouch(ev);
 
 			this._trackMovment();
@@ -149,7 +149,7 @@
 		/**
 		 * Touch is moving. Moving when mouse down
 		 */
-		_move: function( ev ) {
+		_move: function(ev) {
 			// Check for _startTouch when fired mousemove event
 			if ( this._startTouch ) {
 
@@ -160,24 +160,24 @@
 				// Always retranslate touchmove if there was move
 				this._fireTouchMove();
 
-				if ( this._isValidMove() ) {
+				if (this._isValidMove()) {
 					ev.preventDefault();
 					this._validMove = true;
 				}
 
-				if ( this._firstMove ) {
+				if (this._firstMove) {
 					this._firstMove = false;
 				}
 				
-				if ( this._validMove ) {
-					this._fire("move", [ this._formatSwipe() ])
+				if (this._validMove) {
+					this._fire("move", [this._formatSwipe()])
 				}
 			}
 		},
 
 		_formatSwipe: function() {
 			return {
-				dir: this.direction,
+				direction: this.direction,
 				offset: this.offset,
 				duration: this.duration,
 				width: this.width,
@@ -195,7 +195,7 @@
 		 * vertical move.
 		 * There also can be checked, if user is scrolling page
 		 */
-		_isValidMove: function () {
+		_isValidMove: function() {
 			var valid = true;
 
 			// If there is config, start to validate swipe by provided configuration
@@ -221,6 +221,13 @@
 						return false;
 					}
 				}
+
+                // Min duration
+                if (typeof this._config.minDuration != 'undefined') {
+                    if (this._config.minDuration > this.duration) {
+                        return false;
+                    }
+                }
 			}
 
 			return true;
@@ -277,7 +284,7 @@
 		 * Get touch object from event
 		 * We nned only x, y coordinates and time of touch
 		 */
-		_getTouch: function (ev) {
+		_getTouch: function(ev) {
 			if ( ev.originalEvent ) {
 	  			ev = ev.originalEvent;
             }
@@ -309,7 +316,7 @@
 		/**
 		 * Fire events attached callbacks
 		 */
-		_fire: function( eventName, args ) {
+		_fire: function(eventName, args) {
 			for ( var i in this._events[eventName] ) {
 				this._events[eventName][i].apply(this, args);
             }
