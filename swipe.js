@@ -18,7 +18,8 @@
 			["swipe", "move", "start", "end", "touchend", "touchmove"]
 		);
 
-		this._config = config;
+        // Apply configuration
+		this.config(config);
 
 		// Allowed touches count. When swiping we need only one touch
 		this._touchesCount = 1;
@@ -335,6 +336,13 @@
 
 			return this;
 		},
+
+        /**
+         * Set configuration parameters
+         */
+        config: function(config) {
+            this._config = config;
+        },
 
         /**
          * Destroy swipe monitoring
