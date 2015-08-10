@@ -200,11 +200,11 @@
 			// If there is config, start to validate swipe by provided configuration
 			if (this._config) {
 				// Swipe direction
-				if (this._config.dir) {
-					if (this._config.dir == 'horizontal' && !this._isHorizontal()) {
+				if (this._config.direction) {
+					if (this._config.direction == 'horizontal' && !this._isHorizontal()) {
 						return false;
 					}
-					else if (this._config.dir == 'vertical' && !this._isVertical()) {
+					else if (this._config.direction == 'vertical' && !this._isVertical()) {
 						return false;
 					}
 				}
