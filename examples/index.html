@@ -1,116 +1,131 @@
 <!DOCTYPE html>
 <html lang="en-EN" prefix="og: http://ogp.me/ns#">
 <head>
-	<meta charset="UTF-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=0">
-	<style type="text/css">
-	body {
-		padding: 0;
-		margin: 0;
-		height: 1400px;
-		font-family: arial, sans-serif;
-	}
-	.doc {
-		max-width: 700px;
-		margin: 0 auto;
-		padding: 0 20px;
-	}
-	.swipe {
-		background: #ededed;
-		height: 250px;
-		border: 1px solid green;
-		position: relative;
-	}
-	.swipe span {
-		position: absolute;
-		top: 50%;
-		left: 0;
-		right: 0;
-		margin-top: -20px;
-		display: block;
-		text-align: center;
-		text-transform: uppercase;
-		color: #c0c0c0;
-		font-size: 2em;
-	}
-	.swipe:after {
-		content: '';
-		display: 'block';
-		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		z-index: 10;
-	}
-	.log {
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=0">
+    <style type="text/css">
+    body {
+        padding: 0;
+        margin: 0;
+        height: 1400px;
+        font-family: arial, sans-serif;
+    }
+    .doc {
+        max-width: 700px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+    .swipe {
+        background: #ededed;
+        height: 250px;
+        border: 1px solid green;
+        position: relative;
+    }
+    .swipe span {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        margin-top: -20px;
+        display: block;
+        text-align: center;
+        text-transform: uppercase;
+        color: #c0c0c0;
+        font-size: 2em;
+    }
+    .swipe:after {
+        content: '';
+        display: 'block';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 10;
+    }
+    .log {
 
-	}
-	form {
-		margin-bottom: 20px;
-	}
-	form div {
-		margin-top: 10px;
-	}
-	form label {
-		width: 140px;
-		display: inline-block;
-	}
-	form div:first-child {
-		margin-top: 0;
-	}
-	form footer {
-		text-align: center;
-		margin-top: 20px;
-	}
+    }
+    form {
+        margin-bottom: 20px;
+    }
+    form div {
+        margin-top: 10px;
+    }
+    form label {
+        width: 140px;
+        display: inline-block;
+    }
+    form div:first-child {
+        margin-top: 0;
+    }
+    form footer {
+        text-align: center;
+        margin-top: 20px;
+    }
 
-	.obj .p {
-		margin-left: 20px;
-	}
-	</style>
+    .obj .p {
+        margin-left: 20px;
+    }
+    </style>
 </head>
 <body>
-	<div class="doc">
-		<form>
-			<header>
-				<h1>Swipe configuration</h1>
-			</header>
-			<div>
-				<label>Direction:</label>
-				<select name="dir">
-					<option value="">Horizontal and vertical</option>
-					<option value="horizontal">Horizontal</option>
-					<option value="vertical">Vertical</option>
-				</select>
-			</div>
-			<div>
-				<label>Min width, px</label>
-				<input type="number" name="min-width" />
-			</div>
-			<div>
-				<label>Min height, px</label>
-				<input type="number" name="min-height" />
-			</div>
-			<div>
-				<label>Min duration, ms</label>
-				<input type="number" name="min-duration" />
-			</div>
-			<footer>
-				<button type="submit">Apply</button>
-			</footer>
-		</form>
-		<div class="swipe">
-			<span>Swipe here</span>
-		</div>
-		<div class="log">
-			<div class="start"></div>
-			<div class="move"></div>
-			<div class="end"></div>
-		</div>
-	</div>
+    <div class="doc">
+        <form>
+            <header>
+                <h1>Swipe configuration</h1>
+            </header>
+            <div>
+                <label>Direction:</label>
+                <select name="dir">
+                    <option value="">Horizontal and vertical</option>
+                    <option value="horizontal">Horizontal</option>
+                    <option value="vertical">Vertical</option>
+                </select>
+            </div>
 
-	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-	<script type="text/javascript" src="../swipe.js"></script>
-	<script type="text/javascript" src="main.js"></script>
+            <div>
+                <label>Min width, px</label>
+                <input type="number" name="min-width" />
+            </div>
+            <div>
+                <label>Min height, px</label>
+                <input type="number" name="min-height" />
+            </div>
+            <div>
+                <label>Min duration, ms</label>
+                <input type="number" name="min-duration" />
+            </div>
+
+            <div>
+                <label>Max width, px</label>
+                <input type="number" name="max-width" />
+            </div>
+            <div>
+                <label>Max height, px</label>
+                <input type="number" name="max-height" />
+            </div>
+            <div>
+                <label>Max duration, ms</label>
+                <input type="number" name="max-duration" />
+            </div>
+
+            <footer>
+                <button type="submit">Apply</button>
+            </footer>
+        </form>
+        <div class="swipe">
+            <span>Swipe here</span>
+        </div>
+        <div class="log">
+            <div class="start"></div>
+            <div class="move"></div>
+            <div class="end"></div>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script type="text/javascript" src="../swipe.js"></script>
+    <script type="text/javascript" src="main.js"></script>
 </body>
 </html>
