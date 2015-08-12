@@ -182,7 +182,7 @@
                 this._fireTouchMove();
 
                 if (this._isValidMove()) {
-                    ev.preventDefault();
+                    this.preventEvent(ev);
                     this._validMove = true;
                 }
                 else {
@@ -388,8 +388,18 @@
             if ( obj.detachEvent ) {
                 obj.detachEvent( 'on'+type, obj[type+fn] );
                 obj[type+fn] = null;
-            } else {
+            }
+            else {
                 obj.removeEventListener(type, fn, false);
+            }
+        },
+
+        preventEvent: function(ev) {
+            if (ev.preventDefault) {
+                ev.preventDefault();
+            }
+            else {
+                ev.returnValue = false;
             }
         },
 
