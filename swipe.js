@@ -12,7 +12,8 @@
 
 })(this, function(){
     var Swipe = function(el, config) {
-        this.window = window;
+        // Touch/mouse events will be attaches to body
+        this.swipeEl = document.getElementsByTagName('body')[0];
 
         this.el = el;
 
@@ -68,7 +69,7 @@
             var mthis = this;
 
             var start = function(ev) {
-                if (mthis._isTheElement(ev.target)) {
+                if (mthis._isTheElement(mthis.eventTarget(ev))) {
                     this.isTouchedValidElement = true;
 
                     mthis._start(ev);
@@ -95,6 +96,7 @@
             
             // Ja izpildīsies touchstart, tad mouse eventus vairāk neklausāmies
             var touchStart = function(ev) {
+                console.log('touchStart');
                 mthis.isTouchEvents = true;
                 start(ev);
             }
@@ -110,6 +112,7 @@
 
             // Ja ir toucheventi, tad mouse eventus neizpildām
             var mouseStart = function(ev) {
+                console.log('mouseStart');
                 if (!mthis.isTouchEvents) {
                     start(ev)   
                 }
@@ -129,13 +132,13 @@
 
             var eventMethod = method == 'add' ? 'addEvent' : 'removeEvent';
 
-            this[eventMethod](this.window, 'touchstart', touchStart);
-            this[eventMethod](this.window, 'touchmove', touchMove);
-            this[eventMethod](this.window, 'touchend', touchEnd);
+            this[eventMethod](this.swipeEl, 'touchstart', touchStart);
+            this[eventMethod](this.swipeEl, 'touchmove', touchMove);
+            this[eventMethod](this.swipeEl, 'touchend', touchEnd);
         
-            this[eventMethod](this.window, 'mousedown', mouseStart);
-            this[eventMethod](this.window, 'mousemove', mouseMove);
-            this[eventMethod](this.window, 'mouseup', mouseEnd);
+            this[eventMethod](this.swipeEl, 'mousedown', mouseStart);
+            this[eventMethod](this.swipeEl, 'mousemove', mouseMove);
+            this[eventMethod](this.swipeEl, 'mouseup', mouseEnd);
         },
 
         /**
@@ -307,14 +310,10 @@
          * We nned only x, y coordinates and time of touch
          */
         _getTouch: function(ev) {
-            if ( ev.originalEvent ) {
-                ev = ev.originalEvent;
-            }
-
             var t = false;
             var changedTouches = ev.changedTouches;
-
-            if ( changedTouches ) {
+            
+            if (changedTouches) {
                 // Allow only defined number of touches
                 if (changedTouches.length == this._touchesCount) {
                     t = changedTouches[0];
@@ -328,9 +327,12 @@
         },
 
         _formatTouch: function(ev) {
+            var x = typeof ev.pageX == 'undefined' ? ev.x : ev.pageX;
+            var y = typeof ev.pageY == 'undefined' ? ev.y : ev.pageY;
+
             return { 
-                x: ev.pageX,
-                y: ev.pageY,
+                x: x,
+                y: y,
                 t: new Date().getTime()
             }
         },
@@ -401,6 +403,27 @@
             else {
                 ev.returnValue = false;
             }
+        },
+
+        /**
+         * Normalize event.target
+         */
+        eventTarget: function(ev) {
+            var el;
+
+            if (ev.target) {
+                el = ev.target;
+            }
+            else if (ev.srcElement) {
+                el = ev.srcElement
+            }
+            
+            // Safari bug. Selected text returns text
+            if (el.nodeType == 3) {
+                el = el.parentNode
+            }
+
+            return el;
         },
 
         /**
