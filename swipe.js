@@ -1,18 +1,18 @@
 (function(root, factory){
 
     if (typeof exports === 'object') {
-        module.exports = factory(require('jquery'));
+        module.exports = factory();
     }
     else {
         if (typeof root.webit == 'undefined') {
             root.webit = {}
         }
-        root.webit.swipe = factory(jQuery);
+        root.webit.swipe = factory();
     }
 
-})(this, function($){
+})(this, function(){
     var Swipe = function(el, config) {
-        this.$window = $(window);
+        this.window = window;
 
         this.el = el;
 
@@ -50,7 +50,7 @@
          */
         this.isTouchedValidElement = false;
 
-        this._setEvents();
+        this._handleEvents('add');
 
         return this;
     }
@@ -64,7 +64,7 @@
             return r;
         },
 
-        _setEvents: function() {
+        _handleEvents: function(method) {
             var mthis = this;
 
             var start = function(ev) {
@@ -80,7 +80,9 @@
             
             var end = function(ev) {
                 if (this.isTouchedValidElement) {
-                    mthis._end(ev);    
+                    mthis._end(ev);
+
+                    this.isTouchedValidElement = false;
                 }
             }
 
@@ -125,14 +127,15 @@
                 }
             }
 
-            // Set events with custom namespace
-            this.$window.on('touchstart.webitswipe', touchStart);
-            this.$window.on('touchmove.webitswipe', touchMove);
-            this.$window.on('touchend.webitswipe', touchEnd);
+            var eventMethod = method == 'add' ? 'addEvent' : 'removeEvent';
+
+            this[eventMethod](this.window, 'touchstart', touchStart);
+            this[eventMethod](this.window, 'touchmove', touchMove);
+            this[eventMethod](this.window, 'touchend', touchEnd);
         
-            this.$window.on('mousedown.webitswipe', mouseStart);
-            this.$window.on('mousemove.webitswipe', mouseMove);
-            this.$window.on('mouseup.webitswipe', mouseEnd);
+            this[eventMethod](this.window, 'mousedown', mouseStart);
+            this[eventMethod](this.window, 'mousemove', mouseMove);
+            this[eventMethod](this.window, 'mouseup', mouseEnd);
         },
 
         /**
@@ -370,6 +373,26 @@
             return false;
         },
 
+        addEvent: function(obj, type, fn) {
+            if ( obj.attachEvent ) {
+                obj['e'+type+fn] = fn;
+                obj[type+fn] = function(){obj['e'+type+fn](window.event)}
+                obj.attachEvent('on'+type, obj[type+fn]);
+            }
+            else {
+                obj.addEventListener(type, fn, false);
+            }
+        },
+
+        removeEvent: function(obj, type, fn) {
+            if ( obj.detachEvent ) {
+                obj.detachEvent( 'on'+type, obj[type+fn] );
+                obj[type+fn] = null;
+            } else {
+                obj.removeEventListener(type, fn, false);
+            }
+        },
+
         /**
          * Add event listener
          */
@@ -418,7 +441,7 @@
          */
         destroy: function() {
             // Remove all event listeners
-            this.$window.off('.webitswipe');
+            this._handleEvents('remove');
             this.events = [];
         }
     }
