@@ -12,7 +12,9 @@
 
 })(this, function($){
     var Swipe = function(el, config) {
-        this.$el = $(el);
+        this.$window = $(window);
+
+        this.el = el;
 
         this._events = this._prepareEvents(
             ["swipe", "move", "start", "end", "touchend", "touchmove"]
@@ -43,6 +45,11 @@
          */
         this.isTouchEvents = false;
 
+        /**
+         * Is touch started on this.el
+         */
+        this.isTouchedValidElement = false;
+
         this._setEvents();
 
         return this;
@@ -61,15 +68,26 @@
             var mthis = this;
 
             var start = function(ev) {
-                mthis._start(ev);
+                if (mthis._isTheElement(ev.target)) {
+                    this.isTouchedValidElement = true;
+
+                    mthis._start(ev);
+                }
+                else {
+                    this.isTouchedValidElement = false;
+                }
             }
             
             var end = function(ev) {
-                mthis._end(ev);
+                if (this.isTouchedValidElement) {
+                    mthis._end(ev);    
+                }
             }
 
             var move = function(ev) {
-                mthis._move(ev);
+                if (this.isTouchedValidElement) {
+                    mthis._move(ev);
+                }
             }
 
             
@@ -108,13 +126,13 @@
             }
 
             // Set events with custom namespace
-            this.$el.on('touchstart.webitswipe', touchStart);
-            this.$el.on('touchmove.webitswipe', touchMove);
-            this.$el.on('touchend.webitswipe', touchEnd);
+            this.$window.on('touchstart.webitswipe', touchStart);
+            this.$window.on('touchmove.webitswipe', touchMove);
+            this.$window.on('touchend.webitswipe', touchEnd);
         
-            this.$el.on('mousedown.webitswipe', mouseStart);
-            this.$el.on('mousemove.webitswipe', mouseMove);
-            this.$el.on('mouseup.webitswipe', mouseEnd);
+            this.$window.on('mousedown.webitswipe', mouseStart);
+            this.$window.on('mousemove.webitswipe', mouseMove);
+            this.$window.on('mouseup.webitswipe', mouseEnd);
         },
 
         /**
@@ -335,6 +353,24 @@
         },
 
         /**
+         * Check if target is same as this.el or target is child of this.el
+         */
+        _isTheElement: function(target) {
+            return (target == this.el || this._isChild(target, this.el));
+        },
+
+        _isChild: function(target, element) {
+            var n = target.parentNode;
+            while (n) {
+                if (n == element) {
+                    return true;
+                }
+                n = n.parentNode;
+            }
+            return false;
+        },
+
+        /**
          * Add event listener
          */
         on: function(eventName, cb) {
@@ -382,7 +418,7 @@
          */
         destroy: function() {
             // Remove all event listeners
-            this.$el.off('.webitswipe');
+            this.$window.off('.webitswipe');
             this.events = [];
         }
     }
