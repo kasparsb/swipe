@@ -17,7 +17,7 @@
 
         this.el = el;
 
-        this._events = this._prepareEvents(
+        this.events = this.prepareEvents(
             ["swipe", "move", "start", "end", "touchend", "touchmove"]
         );
 
@@ -25,13 +25,13 @@
         this.config(config);
 
         // Allowed touches count. When swiping we need only one touch
-        this._touchesCount = 1;
+        this.touchesCount = 1;
         // Slope factor to distinguise vertical swipe from horizontal
-        this._slopeFactor = 1;
+        this.slopeFactor = 1;
         // First touch when touch start occures
-        this._startTouch = false;
+        this.startTouch = false;
         // Current touch, when swipe is in process
-        this._currentTouch = undefined;
+        this.currentTouch = undefined;
 
         // Swipe width
         this.width;
@@ -51,13 +51,13 @@
          */
         this.isTouchedValidElement = false;
 
-        this._handleEvents('add');
+        this.handleEvents('add');
 
         return this;
     }
 
     Swipe.prototype = {
-        _prepareEvents: function(eventNames) {
+        prepareEvents: function(eventNames) {
             var r = {};
             for ( var i in eventNames ) {
                 r[eventNames[i]] = [];
@@ -65,11 +65,11 @@
             return r;
         },
 
-        _handleEvents: function(method) {
+        handleEvents: function(method) {
             var mthis = this;
 
             var start = function(ev) {
-                if (mthis._isTheElement(mthis.eventTarget(ev))) {
+                if (mthis.isTheElement(mthis.eventTarget(ev))) {
                     this.isTouchedValidElement = true;
 
                     mthis._start(ev);
@@ -96,7 +96,6 @@
             
             // Ja izpildīsies touchstart, tad mouse eventus vairāk neklausāmies
             var touchStart = function(ev) {
-                console.log('touchStart');
                 mthis.isTouchEvents = true;
                 start(ev);
             }
@@ -112,7 +111,6 @@
 
             // Ja ir toucheventi, tad mouse eventus neizpildām
             var mouseStart = function(ev) {
-                console.log('mouseStart');
                 if (!mthis.isTouchEvents) {
                     start(ev)   
                 }
@@ -145,72 +143,67 @@
          * Touch start. When touch starts or when mouse down
          */
         _start: function(ev) {
-            this._startTouch = this._getTouch(ev);
-            this._firstMove = true;
-            this._validMove = false;
+            this.startTouch = this.getTouch(ev);
+            this.validMove = false;
 
-            this._fire("start", [this._startTouch]);
+            this.fire("start", [this.startTouch]);
         },
 
         /**
          * Touch ends
          */
         _end: function(ev) {
-            this._currentTouch = this._getTouch(ev);
+            this.currentTouch = this.getTouch(ev);
 
-            this._trackMovment();
+            this.trackMovment();
 
-            this._startTouch = false;
+            this.startTouch = false;
 
-            if (this._validMove) {
-                this._fire("end", [this._formatSwipe()]);
+            if (this.validMove) {
+                this.fire("end", [this.formatSwipe()]);
              }
 
             // Vienmēr izpildām touchend eventu
-            this._fire("touchend", [this._formatSwipe()]);
+            this.fire("touchend", [this.formatSwipe()]);
         },
 
         /**
          * Touch is moving. Moving when mouse down
          */
         _move: function(ev) {
-            // Check for _startTouch when fired mousemove event
-            if ( this._startTouch ) {
+            // Check for startTouch when fired mousemove event
+            if (this.startTouch) {
 
-                this._currentTouch = this._getTouch(ev);
+                this.currentTouch = this.getTouch(ev);
 
-                this._trackMovment();
+                this.trackMovment();
 
                 // Always retranslate touchmove if there was move
-                this._fireTouchMove();
+                this.fireTouchMove();
 
-                if (this._isValidMove()) {
+                if (this.isValidMove()) {
                     this.preventEvent(ev);
-                    this._validMove = true;
+                    this.validMove = true;
                 }
                 else {
-                    this._validMove = false;   
-                }
-
-                if (this._firstMove) {
-                    this._firstMove = false;
+                    this.validMove = false;   
                 }
                 
-                if (this._validMove) {
-                    this._fire("move", [this._formatSwipe()])
+                if (this.validMove) {
+                    this.fire("move", [this.formatSwipe()])
                 }
             }
         },
 
-        _formatSwipe: function() {
+        formatSwipe: function() {
             return {
                 direction: this.direction,
                 offset: this.offset,
                 duration: this.duration,
                 width: this.width,
                 height: this.height,
-                x: this._currentTouch.x,
-                y: this._currentTouch.y,
+                x: this.currentTouch.x,
+                y: this.currentTouch.y,
 
                 speed: this.width / this.duration
             }
@@ -222,15 +215,15 @@
          * vertical move.
          * There also can be checked, if user is scrolling page
          */
-        _isValidMove: function() {
+        isValidMove: function() {
             var valid = true;
             
             // Swipe direction
             if (this._config.direction) {
-                if (this._config.direction == 'horizontal' && !this._isHorizontal()) {
+                if (this._config.direction == 'horizontal' && !this.isHorizontal()) {
                     return false;
                 }
-                else if (this._config.direction == 'vertical' && !this._isVertical()) {
+                else if (this._config.direction == 'vertical' && !this.isVertical()) {
                     return false;
                 }
             }
@@ -258,32 +251,32 @@
             return true;
         },
 
-        _isHorizontal: function() {
+        isHorizontal: function() {
             return (this.direction == "left" || this.direction == "right");
         },
 
-        _isVertical: function() {
+        isVertical: function() {
             return (this.direction == "up" || this.direction == "down");
         },
 
         /**
          * Track swipe progress. Calculates swipe width, height and duration
          */
-        _trackMovment: function() {
+        trackMovment: function() {
             this.offset = {
-                x: this._currentTouch.x - this._startTouch.x,
-                y: this._currentTouch.y - this._startTouch.y
+                x: this.currentTouch.x - this.startTouch.x,
+                y: this.currentTouch.y - this.startTouch.y
             };
             this.width = Math.abs(this.offset.x);
             this.height = Math.abs(this.offset.y);
-            this.duration = this._currentTouch.t - this._startTouch.t;
-            this.direction = this._getDirection()
+            this.duration = this.currentTouch.t - this.startTouch.t;
+            this.direction = this.getDirection()
         },
 
         /**
          * Get swipe direction
          */
-        _getDirection: function() {
+        getDirection: function() {
             /**
              * Horizontal swipe elevation
              * When swiping left right there van be slight elveation, but this
@@ -291,16 +284,16 @@
              */
             var e = this.offset.y / this.offset.x;
 
-            if (e > this._slopeFactor) {
+            if (e > this.slopeFactor) {
                 return "up";
             }
-            else if (e < -this._slopeFactor) {
+            else if (e < -this.slopeFactor) {
                 return "down";
             }
-            else if (this._currentTouch.x >= this._startTouch.x) {
+            else if (this.currentTouch.x >= this.startTouch.x) {
                 return "right";
             }
-            else if (this._currentTouch.x < this._startTouch.x) {
+            else if (this.currentTouch.x < this.startTouch.x) {
                 return "left";
             }
         },
@@ -309,13 +302,13 @@
          * Get touch object from event
          * We nned only x, y coordinates and time of touch
          */
-        _getTouch: function(ev) {
+        getTouch: function(ev) {
             var t = false;
             var changedTouches = ev.changedTouches;
             
             if (changedTouches) {
                 // Allow only defined number of touches
-                if (changedTouches.length == this._touchesCount) {
+                if (changedTouches.length == this.touchesCount) {
                     t = changedTouches[0];
                 }
             }
@@ -323,10 +316,10 @@
                 t = ev;
             }
             
-            return t ? this._formatTouch(t) : false;
+            return t ? this.formatTouch(t) : false;
         },
 
-        _formatTouch: function(ev) {
+        formatTouch: function(ev) {
             var x = typeof ev.pageX == 'undefined' ? ev.x : ev.pageX;
             var y = typeof ev.pageY == 'undefined' ? ev.y : ev.pageY;
 
@@ -340,9 +333,9 @@
         /**
          * Fire events attached callbacks
          */
-        _fire: function(eventName, args) {
-            for ( var i in this._events[eventName] ) {
-                this._events[eventName][i].apply(this, args);
+        fire: function(eventName, args) {
+            for (var i in this.events[eventName]) {
+                this.events[eventName][i].apply(this, args);
             }
         },
 
@@ -350,21 +343,21 @@
          * Always retranslate touch move event
          * Check if swipe width or height is greater then 0
          */
-        _fireTouchMove: function() {
-            var t = this._formatSwipe();
+        fireTouchMove: function() {
+            var t = this.formatSwipe();
             if (t.width > 0 || t.height > 0) {
-                this._fire("touchmove", [t]);
+                this.fire("touchmove", [t]);
             }
         },
 
         /**
          * Check if target is same as this.el or target is child of this.el
          */
-        _isTheElement: function(target) {
-            return (target == this.el || this._isChild(target, this.el));
+        isTheElement: function(target) {
+            return (target == this.el || this.isChild(target, this.el));
         },
 
-        _isChild: function(target, element) {
+        isChild: function(target, element) {
             var n = target.parentNode;
             while (n) {
                 if (n == element) {
@@ -430,8 +423,8 @@
          * Add event listener
          */
         on: function(eventName, cb) {
-            if ( typeof this._events[eventName] == "object" ) {
-                this._events[eventName].push( cb );
+            if (typeof this.events[eventName] == "object") {
+                this.events[eventName].push( cb );
             }
 
             return this;
@@ -474,7 +467,7 @@
          */
         destroy: function() {
             // Remove all event listeners
-            this._handleEvents('remove');
+            this.handleEvents('remove');
             this.events = [];
         }
     }
