@@ -1,0 +1,62 @@
+body {
+    padding: 0;
+    margin: 0;
+    height: 1400px;
+    font-family: arial, sans-serif;
+}
+.doc {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+.swipe {
+    background: #ededed;
+    height: 250px;
+    border: 1px solid green;
+    position: relative;
+}
+.swipe span {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    margin-top: -20px;
+    display: block;
+    text-align: center;
+    text-transform: uppercase;
+    color: #c0c0c0;
+    font-size: 2em;
+}
+.swipe:after {
+    content: '';
+    background: #000;
+    opacity: 0;
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10;
+}
+form {
+    margin-bottom: 20px;
+}
+form div {
+    margin-top: 10px;
+}
+form label {
+    width: 140px;
+    display: inline-block;
+}
+form div:first-child {
+    margin-top: 0;
+}
+form footer {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.obj .p {
+    margin-left: 20px;
+}
