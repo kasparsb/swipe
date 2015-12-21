@@ -39,6 +39,8 @@
         this.height;
         // Swipe duration
         this.duration;
+        // In case of directional swipe, this will be initial swipe direction (horizontal or vertical)
+        this.moveDirection = null;
 
         /**
          * Is touch events supported
@@ -145,6 +147,7 @@
         _start: function(ev) {
             this.startTouch = this.getTouch(ev);
             this.validMove = false;
+            this.moveDirection = null;
 
             this.fire("start", [this.startTouch]);
         },
@@ -217,13 +220,27 @@
          */
         isValidMove: function() {
             var valid = true;
+
+            /**
+             * Ja ir directional swipe, tad ja ir nodetektēts direction
+             * atbilstošs swipe, vairāk to nepārtraucam. Jo swipe laikā
+             * var mainīties direction, no left kļūt par top
+             */
             
             // Swipe direction
             if (this._config.direction) {
-                if (this._config.direction == 'horizontal' && !this.isHorizontal()) {
-                    return false;
+                
+                // Uzstādām pirmo dektēto swipe virzienu
+                if (!this.moveDirection) {
+                    if (this.isHorizontal()) {
+                        this.moveDirection = 'horizontal';
+                    }
+                    else if (this.isVertical()) {
+                        this.moveDirection = 'vertical';
+                    }
                 }
-                else if (this._config.direction == 'vertical' && !this.isVertical()) {
+
+                if (this.moveDirection != this._config.direction) {
                     return false;
                 }
             }
