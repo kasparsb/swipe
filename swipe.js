@@ -11,7 +11,13 @@
     }
 
 })(this, function(){
+
+    var instances = 0;
+
     var Swipe = function(el, config) {
+        this.instanceId = instances++;
+
+
         // Touch/mouse events will be attaches to body
         this.swipeEl = document.getElementsByTagName('body')[0];
 
@@ -71,26 +77,22 @@
             var mthis = this;
 
             var start = function(ev) {
+                mthis.isTouchedValidElement = false;
                 if (mthis.isTheElement(mthis.eventTarget(ev))) {
-                    this.isTouchedValidElement = true;
-
+                    mthis.isTouchedValidElement = true;
                     mthis._start(ev);
-                }
-                else {
-                    this.isTouchedValidElement = false;
                 }
             }
             
             var end = function(ev) {
-                if (this.isTouchedValidElement) {
+                if (mthis.isTouchedValidElement) {
                     mthis._end(ev);
-
-                    this.isTouchedValidElement = false;
+                    mthis.isTouchedValidElement = false;
                 }
             }
 
             var move = function(ev) {
-                if (this.isTouchedValidElement) {
+                if (mthis.isTouchedValidElement) {
                     mthis._move(ev);
                 }
             }
