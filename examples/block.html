@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en-EN" prefix="og: http://ogp.me/ns#">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=0">
+    <style>
+    html,
+    body {
+        height: 100%;
+        background: #e8e8e8;
+    }
+    .block {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100px;
+        height: 100px;
+        background: #00cf26;
+
+        will-change: transform;
+    }
+    </style>
+</head>
+<body>
+    <div class="block"></div>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script type="text/javascript" src="../swipe.js"></script>
+    <script>
+    jQuery(function($){
+        var $el = $('.block');
+        var el = $el.get(0);
+
+        var startPos, currentOffset, isStarted=false;
+
+        startPos = {
+            x: 0,
+            y: 0
+        }
+
+        function start() {
+            isStarted = true;
+            position();
+        }
+
+        function stop() {
+            isStarted = false;
+        }
+
+        function position() {
+            requestAnimationFrame(function(){
+                if (isStarted) {
+                    _p();
+                    position();
+                }
+            })
+        }
+
+        function _p() {
+            if (currentOffset) {
+                var x = startPos.x + currentOffset.x;
+                var y = startPos.y + currentOffset.y;
+
+                el.style.transform = 'translate3d('+x+'px,'+y+'px,0)';
+            }
+        }
+
+        swipe = new webit.swipe(el, {})
+            .on("start", function(t){
+                console.timeStamp('start');
+                start();
+            })
+            .on("end", function(t){
+                stop();
+
+                startPos.x = startPos.x + currentOffset.x;
+                startPos.y = startPos.y + currentOffset.y;
+
+                currentOffset = null;
+
+                console.timeStamp('end');
+            })
+            .on("move", function(t){
+                currentOffset = t.offset;
+
+                //_p();
+            });
+    })
+    </script>
+</body>
+</html>
