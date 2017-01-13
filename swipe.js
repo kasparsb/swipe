@@ -160,7 +160,8 @@
         _end: function(ev) {
             this.currentTouch = this.getTouch(ev);
 
-            this.trackMovment();
+            // Šajā mirklī tas ir lieki
+            //this.trackMovment();
 
             this.startTouch = false;
 
@@ -309,7 +310,7 @@
             else if (e < -this.slopeFactor) {
                 return "down";
             }
-            else if (this.currentTouch.x >= this.startTouch.x) {
+            else if (this.currentTouch.x > this.startTouch.x) {
                 return "right";
             }
             else if (this.currentTouch.x < this.startTouch.x) {
