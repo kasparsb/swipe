@@ -8,26 +8,51 @@
     body {
         height: 100%;
         background: #e8e8e8;
+        padding: 0;
+        margin: 0;
     }
-    .block {
+    .container {
+        width: 400px;
+        height: 400px;
+        position: relative;
+        margin: 80px auto 0;
+    }
+    .slides {
         position: absolute;
         top: 0;
         left: 0;
-        width: 100px;
-        height: 100px;
-        background: #00cf26;
-
-        will-change: transform;
+        bottom: 0;
+        width: 1200px;
+    }
+    .slide {
+        width: 400px;
+        height: 100%;
+        float: left;
+    }
+    .slide-1 {
+        background: #90C3D4;
+    }
+    .slide-2 {
+        background: #4ED99F;
+    }
+    .slide-3 {
+        background: #ED9898;
     }
     </style>
 </head>
 <body>
-    <div class="block"></div>
+    <div class="container">
+        <div class="slides">
+            <div class="slide slide-1"></div>
+            <div class="slide slide-2"></div>
+            <div class="slide slide-3"></div>
+        </div>
+    </div>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
     <script type="text/javascript" src="../swipe.js"></script>
     <script>
     jQuery(function($){
-        var $el = $('.block');
+        var $el = $('.slides');
         var el = $el.get(0);
 
         var startPos, currentOffset, isStarted=false;
@@ -58,7 +83,8 @@
         function _p() {
             if (currentOffset) {
                 var x = startPos.x + currentOffset.x;
-                var y = startPos.y + currentOffset.y;
+                //var y = startPos.y + currentOffset.y;
+                var y = 0;
 
                 el.style.transform = 'translate3d('+x+'px,'+y+'px,0)';
             }
