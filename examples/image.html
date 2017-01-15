@@ -12,105 +12,185 @@
         margin: 0;
     }
     .container {
-        width: 400px;
-        height: 400px;
+        width: 100%;
+        height: 140px;
         position: relative;
-        margin: 80px auto 0;
+        margin: 20px auto 0;
+        overflow: hidden;
     }
     .slides {
         position: absolute;
         top: 0;
         left: 0;
         bottom: 0;
-        width: 1200px;
+        width: 300vw;
+
+        will-change: transform;
     }
     .slide {
-        width: 400px;
+        width: 100vw;
         height: 100%;
         float: left;
+        background-size: cover;
+        background-position: center;
+        overflow: hidden;
+        position: relative;
     }
     .slide-1 {
-        background: #90C3D4;
+        background-color: #90c3d4;
     }
     .slide-2 {
-        background: #4ED99F;
+        background-color: #f44242;
     }
     .slide-3 {
-        background: #ED9898;
+        background-color: #ed9898;
+    }
+    .img {
+        display: block;
+        position: absolute;
+        width: 100%;
+        height: auto;
+        top: 50%;
+        transform: translate(0,-50%);
+    }
+
+    .plain {
+        background: silver;
+        height: 140px;
+
+        margin-top: 20px;
     }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="slides">
-            <div class="slide slide-1"></div>
-            <div class="slide slide-2"></div>
-            <div class="slide slide-3"></div>
+            <div class="slide slide-1" style="background-image:url(https://c1.staticflickr.com/1/473/32241479046_149a370254_k.jpg)"></div>
+            <div class="slide slide-2" style="background-image:url(https://c1.staticflickr.com/1/394/31445234304_0ae90b9fcc_k.jpg)"></div>
+            <div class="slide slide-3" style="background-image:url(https://c1.staticflickr.com/1/542/32288461045_3f69e0c2c6_k.jpg)"></div>
         </div>
     </div>
+
+    <div class="container">
+        <div class="slides">
+            <div class="slide slide-1"><img class="img" src="https://c1.staticflickr.com/1/473/32241479046_149a370254_k.jpg" /></div>
+            <div class="slide slide-2"><img class="img" src="https://c1.staticflickr.com/1/394/31445234304_0ae90b9fcc_k.jpg" /></div>
+            <div class="slide slide-3"><img class="img" src="https://c1.staticflickr.com/1/542/32288461045_3f69e0c2c6_k.jpg" /></div>
+        </div>
+    </div>
+
+    <div class="plain"></div>
+
+    <div class="log"></div>
+
+
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
     <script type="text/javascript" src="../swipe.js"></script>
     <script>
+    var $log;
+    function log(p1, p2) {
+        console.log(p1, p2);
+        $log.append('<div>'+p1+' '+p2+'</div>');
+    }
+
+
     jQuery(function($){
-        var $el = $('.slides');
-        var el = $el.get(0);
 
-        var startPos, currentOffset, isStarted=false;
+        $log = $('.log');
 
-        startPos = {
-            x: 0,
-            y: 0
-        }
 
-        function start() {
-            isStarted = true;
-            position();
-        }
+        function initSlider(el) {
+            var startPos={x:0,y:0}, currentOffset={x:0,y:0}, isStarted=false, lastTime=0, t, prevX, endCb;
 
-        function stop() {
-            isStarted = false;
-        }
-
-        function position() {
-            requestAnimationFrame(function(){
-                if (isStarted) {
-                    _p();
-                    position();
-                }
-            })
-        }
-
-        function _p() {
-            if (currentOffset) {
-                var x = startPos.x + currentOffset.x;
-                //var y = startPos.y + currentOffset.y;
-                var y = 0;
-
-                el.style.transform = 'translate3d('+x+'px,'+y+'px,0)';
+            function start() {
+                isStarted = true;
+                position();
             }
+
+            function stop() {
+                isStarted = false;
+            }
+
+            function setX(el, x) {
+                log('prevx', prevX+':'+x);
+                el.style.transform = 'translate3d('+x+'px,0,0)';
+
+                prevX = x;
+            }
+
+            function position() {
+                requestAnimationFrame(function(){
+                    if (isStarted) {
+                        t = window.performance.now();
+
+                        //log('r', t-lastTime);
+
+                        lastTime = t;
+
+                        _p();
+                        position();
+                    }
+                })
+            }
+
+            function _p() {
+                if (currentOffset) {
+                    var x = startPos.x + currentOffset.x;
+                    //var y = startPos.y + currentOffset.y;
+                    var y = 0;
+
+                    //log('translate', x);
+
+                    setX(el, x)
+                }
+            }
+
+            swipe = new webit.swipe(el, {})
+                .on("start", function(t){
+                    
+                    el.style.transition = 'none';
+
+                    start();
+                })
+                .on("touchend", function(t){
+                    stop();
+
+                    
+                    
+                    el.style.transition = 'transform 600ms ease-out';
+                    setX(el, -($(window).width()))    
+                    
+                    
+
+                    startPos.x = startPos.x + currentOffset.x;
+                    startPos.y = startPos.y + currentOffset.y;
+
+                    currentOffset = null;
+                })
+                .on("move", function(t){
+                    log('move', t.offset.x);
+                    currentOffset = t.offset;
+                });
         }
 
-        swipe = new webit.swipe(el, {})
+
+        $('.slides').each(function(){
+            initSlider(this);    
+        })
+        
+        
+
+
+
+
+        swipe = new webit.swipe($('.plain').get(0), {})
             .on("start", function(t){
-                console.log('start', window.performance.now());
-                
-                start();
-            })
-            .on("end", function(t){
-                stop();
-
-                startPos.x = startPos.x + currentOffset.x;
-                startPos.y = startPos.y + currentOffset.y;
-
-                currentOffset = null;
+                log('t2.start', t.x);
             })
             .on("move", function(t){
-                console.log('move', window.performance.now());
-
-                currentOffset = t.offset;
-
-                //_p();
+                log('t2.move', t.offset.x);
             });
+        
     })
     </script>
 </body>

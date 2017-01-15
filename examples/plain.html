@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en-EN" prefix="og: http://ogp.me/ns#">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=0">
+    <style>
+    html,
+    body {
+        height: 100%;
+        padding: 0;
+    }
+    .block {
+        width: 90%;
+        height: 200px;
+        background: #00cf26;
+    }
+    </style>
+</head>
+<body>
+    <div class="block"></div>
+    <div class="log"></div>
+
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script>
+    var $log, $el, startX;
+    
+    function log(p1, p2) {
+        console.log(p1, p2);
+        $log.append('<div>'+p1+' '+p2+'</div>');
+    }
+
+    function addEvent(obj, type, fn) {
+        if ( obj.attachEvent ) {
+            obj['e'+type+fn] = fn;
+            obj[type+fn] = function(){obj['e'+type+fn](window.event)}
+            obj.attachEvent('on'+type, obj[type+fn]);
+        }
+        else {
+            obj.addEventListener(type, fn, false);
+        }
+    }
+
+    function getTouch(ev) {
+        var t = false;
+        var changedTouches = ev.changedTouches;
+        
+        if (changedTouches) {
+            // Allow only defined number of touches
+            if (changedTouches.length == 1) {
+                t = changedTouches[0];
+            }
+        }
+        else {
+            t = ev;
+        }
+        
+        return t ? formatTouch(t) : false;
+    }
+
+    function formatTouch(ev) {
+        var x = typeof ev.pageX == 'undefined' ? ev.x : ev.pageX;
+        var y = typeof ev.pageY == 'undefined' ? ev.y : ev.pageY;
+
+        return { 
+            x: x,
+            y: y,
+            t: new Date().getTime()
+        }
+    }
+
+    jQuery(function($){
+        
+        $el = $('.block');
+        $log = $('.log');
+
+        addEvent($el.get(0), 'touchstart', function(ev){
+            var t = getTouch(ev);
+
+            startX = t.x;
+
+            log('start', t.x);
+        });
+
+        addEvent($el.get(0), 'touchmove', function(ev){
+            var t = getTouch(ev);
+
+            log('move', t.x - startX);
+        });
+    })
+    </script>
+</body>
+</html>
