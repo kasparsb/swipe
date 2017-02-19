@@ -210,6 +210,7 @@
                 height: this.height,
                 x: this.currentTouch.x,
                 y: this.currentTouch.y,
+                touchedElement: this.currentTouch.touchedElement,
 
                 speed: this.width / this.duration
             }
@@ -336,7 +337,14 @@
                 t = ev;
             }
             
-            return t ? this.formatTouch(t) : false;
+            t = t ? this.formatTouch(t) : false;
+
+            if (t) {
+                // Pieglabājam elementu, uz kura notika touch
+                t.touchedElement = this.eventTarget(ev);
+            }
+
+            return t;
         },
 
         formatTouch: function(ev) {

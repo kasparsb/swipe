@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en-EN" prefix="og: http://ogp.me/ns#">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=0">
+    <style>
+    html,
+    body {
+        height: 100%;
+        background: #e8e8e8;
+        padding: 0;
+        margin: 0;
+    }
+    .container {
+        width: 100%;
+        max-width: 400px;
+        position: relative;
+        margin: 20px auto 0;
+        overflow: hidden;
+    }
+    .el {
+        border-radius: 4px;
+        background: blue;
+        color: #fff;
+        text-align: center;
+        padding: 10px;
+        margin-bottom: 12px;
+    }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="el">1</div>
+        <div class="el">2</div>
+        <div class="el">3</div>
+        <div class="el">4</div>
+        <div class="el">5</div>
+    </div>
+
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script type="text/javascript" src="../swipe.js"></script>
+    <script>
+    
+    jQuery(function($){
+
+        swipe = new webit.swipe($('.container').get(0), {})
+            .on("start", function(t){
+                console.log('start', t.touchedElement);
+            })
+            .on("move", function(t){
+                console.log('move', t.touchedElement);
+            })
+            .on("end", function(t){
+                console.log('end', t.touchedElement);
+            });
+        
+    })
+    </script>
+</body>
+</html>
