@@ -26,6 +26,9 @@
         padding: 10px;
         margin-bottom: 12px;
     }
+    .log {
+        margin-top: 20px;
+    }
     </style>
 </head>
 <body>
@@ -37,21 +40,46 @@
         <div class="el">5</div>
     </div>
 
+    <div class="log"></div>
+
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
     <script type="text/javascript" src="../swipe.js"></script>
     <script>
-    
     jQuery(function($){
+
+        var $log = $(".log");
+
+        function clearLog() {
+            $log.html('');
+        }
+
+        function logEvent(t) {
+            $log.html(t);
+        }
+
+        function elHtml(el) {
+            var $el = $(el);
+            if ($el.hasClass('el')) {
+                return $el.html();
+            }
+            else {
+                return 'out of element';
+            }
+        }
 
         swipe = new webit.swipe($('.container').get(0), {})
             .on("start", function(t){
                 console.log('start', t.touchedElement);
+                clearLog();
+                logEvent('start - '+elHtml(t.touchedElement));
             })
             .on("move", function(t){
                 console.log('move', t.touchedElement);
+                logEvent('move - '+elHtml(t.touchedElement));
             })
             .on("end", function(t){
                 console.log('end', t.touchedElement);
+                logEvent('end - '+elHtml(t.touchedElement));
             });
         
     })

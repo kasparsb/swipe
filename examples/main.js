@@ -53,10 +53,10 @@
             swipe = new webit.swipe(el, settings())
                 .on("start", function(t){
                     clearLog();
-                    logEvent('start', t);
+                    // logEvent('start', t);
                 })
                 .on("end", function(t){
-                    logEvent('end', t);
+                    // logEvent('end', t);
                 })
                 .on("move", function(t){
                     logEvent('move', t);
@@ -79,12 +79,17 @@
         $log.find('.'+t).html(t+objHTML(ev));
     }
 
-    function objHTML(obj) {
+    function objHTML(obj, level) {
+        level = typeof level == 'undefined' ? 1 : level;
+        if (level > 2) {
+            return;
+        }
+
         var h = '<div class="obj"><div>{</div>';
         
         for (var p in obj) {
-            if (typeof obj[p] == 'object') {
-                h += '<div class="p">'+p+': '+objHTML(obj[p])+'</div>'; 
+            if (p == 'offset' && typeof obj[p] == 'object') {
+                h += '<div class="p">'+p+': '+objHTML(obj[p], level+1)+'</div>'; 
             }
             else {
                 h += '<div class="p">'+p+': '+obj[p]+'</div>';      
