@@ -36,6 +36,8 @@
         this.slopeFactor = 1;
         // First touch when touch start occures
         this.startTouch = false;
+        // First touch when first move event triggered
+        this.firstMoveTouch = false;
         // Current touch, when swipe is in process
         this.currentTouch = undefined;
 
@@ -148,6 +150,7 @@
          */
         _start: function(ev) {
             this.startTouch = this.getTouch(ev);
+            this.firstMoveTouch = false;
             this.validMove = false;
             this.moveDirection = null;
 
@@ -164,6 +167,7 @@
             //this.trackMovment();
 
             this.startTouch = false;
+            this.firstMoveTouch = false;
 
             if (this.validMove) {
                 this.fire("end", [this.formatSwipe()]);
@@ -179,6 +183,10 @@
         _move: function(ev) {
             // Check for startTouch when fired mousemove event
             if (this.startTouch) {
+
+                if (!this.firstMoveTouch) {
+                    this.firstMoveTouch = this.getTouch(ev);
+                }
 
                 this.currentTouch = this.getTouch(ev);
 
@@ -285,8 +293,8 @@
          */
         trackMovment: function() {
             this.offset = {
-                x: this.currentTouch.x - this.startTouch.x,
-                y: this.currentTouch.y - this.startTouch.y
+                x: this.currentTouch.x - this.firstMoveTouch.x,
+                y: this.currentTouch.y - this.firstMoveTouch.y
             };
             this.width = Math.abs(this.offset.x);
             this.height = Math.abs(this.offset.y);
