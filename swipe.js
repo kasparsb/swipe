@@ -137,7 +137,7 @@
             var eventMethod = method == 'add' ? 'addEvent' : 'removeEvent';
 
             this[eventMethod](this.swipeEl, 'touchstart', touchStart);
-            this[eventMethod](this.swipeEl, 'touchmove', touchMove);
+            this[eventMethod](this.swipeEl, 'touchmove', touchMove, {passive: false});
             this[eventMethod](this.swipeEl, 'touchend', touchEnd);
         
             this[eventMethod](this.swipeEl, 'mousedown', mouseStart);
@@ -404,24 +404,26 @@
             return false;
         },
 
-        addEvent: function(obj, type, fn) {
+        addEvent: function(obj, type, fn, params) {
+            params = (typeof params == 'undefined' ? false : params);
             if ( obj.attachEvent ) {
                 obj['e'+type+fn] = fn;
                 obj[type+fn] = function(){obj['e'+type+fn](window.event)}
                 obj.attachEvent('on'+type, obj[type+fn]);
             }
             else {
-                obj.addEventListener(type, fn, false);
+                obj.addEventListener(type, fn, params);
             }
         },
 
-        removeEvent: function(obj, type, fn) {
+        removeEvent: function(obj, type, fn, params) {
+            params = (typeof params == 'undefined' ? false : params);
             if ( obj.detachEvent ) {
                 obj.detachEvent( 'on'+type, obj[type+fn] );
                 obj[type+fn] = null;
             }
             else {
-                obj.removeEventListener(type, fn, false);
+                obj.removeEventListener(type, fn, params);
             }
         },
 
