@@ -1,11 +1,8 @@
 {
   "name": "swipe",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "Touch or mouse swipe library",
   "main": "swipe.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "repository": {
     "type": "git",
     "url": "https://github.com/kasparsb/swipe.git"
@@ -15,7 +12,7 @@
     "touch"
   ],
   "author": "Kaspars Bulins",
-  "license": "MIT",
+  "license": "GPL",
   "bugs": {
     "url": "https://github.com/kasparsb/swipe/issues"
   },

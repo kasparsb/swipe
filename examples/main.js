@@ -53,10 +53,11 @@
             swipe = new webit.swipe(el, settings())
                 .on("start", function(t){
                     clearLog();
-                    // logEvent('start', t);
+                    logEvent('start', t);
                 })
                 .on("end", function(t){
-                    // logEvent('end', t);
+                    logEvent('end', t);
+                    logEvent('swipelog', t._swipeLog);
                 })
                 .on("move", function(t){
                     logEvent('move', t);
