@@ -50,6 +50,13 @@
         // In case of directional swipe, this will be initial swipe direction (horizontal or vertical)
         this.moveDirection = null;
 
+        this.swipeLog = {
+            stack: [],
+            duration: 0,
+            width: 0,
+            height: 0
+        };
+
         /**
          * Is touch events supported
          * This will be determined when first touchstart event fires
@@ -153,6 +160,7 @@
             this.firstMoveTouch = false;
             this.validMove = false;
             this.moveDirection = null;
+            this.swipeLog.stack = [];
 
             this.fire("start", [this.startTouch]);
         },
@@ -163,18 +171,45 @@
         _end: function(ev) {
             this.currentTouch = this.getTouch(ev);
 
-            // Šajā mirklī tas ir lieki
-            //this.trackMovment();
+            //this.trackMovment(); //Šajā mirklī tas ir lieki
+            this.trackDuration();
+            this.trackSwipe();
 
             this.startTouch = false;
             this.firstMoveTouch = false;
 
+            var movement = this.formatMovement();
+
+            // Liekam swipe statusu
+            movement._swipeLog = {
+                duration: this.swipeLog.duration,
+                width: this.swipeLog.width,
+                height: this.swipeLog.height,
+                stackLength: this.swipeLog.stackLength,
+                isSwipe: false
+            };
+            
+            /**
+             * Šeit pēc duration, width un height nosakām vai tā varēja
+             * būt swipe kustība. Varbūt atkarībā no iekārtas varētu šo 
+             * parametrus piekoriģēt???
+             */
+            if (this.swipeLog.duration < 80) {
+                if (this.swipeLog.width > 7 || this.swipeLog.height > 7) {
+                    movement._swipeLog.isSwipe = true;
+                }
+            }
+
+
+            // Pazīme, vai bija swipe kustība
+            movement.isSwipe = movement._swipeLog.isSwipe;
+
             if (this.validMove) {
-                this.fire("end", [this.formatSwipe()]);
+                this.fire("end", [movement]);
              }
 
             // Vienmēr izpildām touchend eventu
-            this.fire("touchend", [this.formatSwipe()]);
+            this.fire("touchend", [movement]);
         },
 
         /**
@@ -191,6 +226,8 @@
                 this.currentTouch = this.getTouch(ev);
 
                 this.trackMovment();
+                this.trackDuration();
+                this.trackSwipe();
 
                 // Always retranslate touchmove if there was move
                 this.fireTouchMove();
@@ -204,12 +241,12 @@
                 }
                 
                 if (this.validMove) {
-                    this.fire("move", [this.formatSwipe()])
+                    this.fire("move", [this.formatMovement()])
                 }
             }
         },
 
-        formatSwipe: function() {
+        formatMovement: function() {
             return {
                 direction: this.direction,
                 offset: this.offset,
@@ -298,8 +335,31 @@
             };
             this.width = Math.abs(this.offset.x);
             this.height = Math.abs(this.offset.y);
+            
+            this.direction = this.getDirection();
+        },
+
+        trackDuration: function() {
             this.duration = this.currentTouch.t - this.startTouch.t;
-            this.direction = this.getDirection()
+        },
+
+        trackSwipe: function() {
+            // Uzkrājam pēdējās 100 move kustības. No tām tiks noteikts vai ir bijis swipe
+            this.swipeLog.stack.push({
+                x: this.currentTouch.x,
+                y: this.currentTouch.y,
+                duration: this.duration
+            });
+
+            if (this.swipeLog.stack.length > 4) {
+                this.swipeLog.stack.shift();
+            }
+
+            // Time between first and last logged movement
+            this.swipeLog.stackLength = this.swipeLog.stack.length;
+            this.swipeLog.duration = this.swipeLog.stack[this.swipeLog.stack.length-1].duration - this.swipeLog.stack[0].duration;
+            this.swipeLog.width = Math.abs(this.swipeLog.stack[this.swipeLog.stack.length-1].x - this.swipeLog.stack[0].x);
+            this.swipeLog.height = Math.abs(this.swipeLog.stack[this.swipeLog.stack.length-1].y - this.swipeLog.stack[0].y);
         },
 
         /**
@@ -325,6 +385,14 @@
             else if (this.currentTouch.x < this.startTouch.x) {
                 return "left";
             }
+        },
+
+        /**
+         * Nosakām vai kustība ir tīrs swipe bez pauzēm. 
+         * Varbūt pauze var būt kustības vidū, bet kustībai ir jābeidzas ar swipe
+         */
+        getIsSwipe: function() {
+            
         },
 
         /**
@@ -380,7 +448,7 @@
          * Check if swipe width or height is greater then 0
          */
         fireTouchMove: function() {
-            var t = this.formatSwipe();
+            var t = this.formatMovement();
             if (t.width > 0 || t.height > 0) {
                 this.fire("touchmove", [t]);
             }
