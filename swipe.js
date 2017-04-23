@@ -174,13 +174,9 @@
         _end: function(ev) {
             this.currentTouch = this.getTouch(ev);
 
-            
             this.trackDuration();
             this.trackSwipe();
             //this.trackMovment(); //Šajā mirklī tas ir lieki
-
-            this.startTouch = false;
-            this.firstMoveTouch = false;
 
             var movement = this.formatMovement();
 
@@ -204,9 +200,12 @@
                 }
             }
 
-
             // Pazīme, vai bija swipe kustība
             movement.isSwipe = movement._swipeLog.isSwipe;
+
+
+            this.startTouch = false;
+            this.firstMoveTouch = false;
 
             if (this.validMove) {
                 this.fire("end", [movement]);
