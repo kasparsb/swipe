@@ -50,6 +50,9 @@
         // In case of directional swipe, this will be initial swipe direction (horizontal or vertical)
         this.moveDirection = null;
 
+        // Cik pēdējās swipe kustības uzkrāt, lai noteiktu vai ir bijis swipe
+        this.swipeLogStackMaxLength = 4;
+
         this.swipeLog = {
             stack: [],
             duration: 0,
@@ -171,9 +174,10 @@
         _end: function(ev) {
             this.currentTouch = this.getTouch(ev);
 
-            //this.trackMovment(); //Šajā mirklī tas ir lieki
+            
             this.trackDuration();
             this.trackSwipe();
+            //this.trackMovment(); //Šajā mirklī tas ir lieki
 
             this.startTouch = false;
             this.firstMoveTouch = false;
@@ -185,7 +189,7 @@
                 duration: this.swipeLog.duration,
                 width: this.swipeLog.width,
                 height: this.swipeLog.height,
-                stackLength: this.swipeLog.stackLength,
+                stackLength: this.swipeLog.stack.lenght,
                 isSwipe: false
             };
             
@@ -225,9 +229,9 @@
 
                 this.currentTouch = this.getTouch(ev);
 
-                this.trackMovment();
                 this.trackDuration();
                 this.trackSwipe();
+                this.trackMovment();
 
                 // Always retranslate touchmove if there was move
                 this.fireTouchMove();
@@ -248,7 +252,8 @@
 
         formatMovement: function() {
             return {
-                direction: this.direction,
+                // Padodam konfigurācijai atbilstošu direction. Ja ir iekonfigurēts horizontal, tad padodam left or right
+                direction: this.getFormattedDirection(),
                 offset: this.offset,
                 duration: this.duration,
                 width: this.width,
@@ -257,7 +262,19 @@
                 y: this.currentTouch.y,
                 touchedElement: this.currentTouch.touchedElement,
 
-                speed: this.width / this.duration
+                speed: this.width / this.duration,
+                realDirection: this.direction
+            }
+        },
+
+        getFormattedDirection: function() {
+            switch (this._config.direction) {
+                case 'horizontal':
+                    return this.getHorizontalDirection();
+                case 'vertical':
+                    return this.getVerticalDirection();
+                default:
+                    return this.getDirection();
             }
         },
 
@@ -270,6 +287,11 @@
         isValidMove: function() {
             var valid = true;
 
+            // Ja swipeLog nav pilns, tad nevaram vēl validēt move
+            if (!this.isSwipeStackReady()) {
+                return false;
+            }
+
             /**
              * Ja ir directional swipe, tad ja ir nodetektēts direction
              * atbilstošs swipe, vairāk to nepārtraucam. Jo swipe laikā
@@ -279,14 +301,9 @@
             // Swipe direction
             if (this._config.direction) {
                 
-                // Uzstādām pirmo dektēto swipe virzienu
+                // Uzstādām pirmo detektēto swipe virzienu
                 if (!this.moveDirection) {
-                    if (this.isHorizontal()) {
-                        this.moveDirection = 'horizontal';
-                    }
-                    else if (this.isVertical()) {
-                        this.moveDirection = 'vertical';
-                    }
+                    this.moveDirection = this.getMoveDirection();
                 }
 
                 if (this.moveDirection != this._config.direction) {
@@ -317,12 +334,11 @@
             return true;
         },
 
-        isHorizontal: function() {
-            return (this.direction == "left" || this.direction == "right");
-        },
-
-        isVertical: function() {
-            return (this.direction == "up" || this.direction == "down");
+        /**
+         * Vai swipe log stackā ir pietiekami daudz elementu
+         */
+        isSwipeStackReady: function() {
+            return this.swipeLog.stack.length >= this.swipeLogStackMaxLength;
         },
 
         /**
@@ -344,28 +360,54 @@
         },
 
         trackSwipe: function() {
-            // Uzkrājam pēdējās 100 move kustības. No tām tiks noteikts vai ir bijis swipe
+            // Uzkrājam pēdējās this.swipeLogStackMaxLength move kustības. No tām tiks noteikts vai ir bijis swipe
             this.swipeLog.stack.push({
                 x: this.currentTouch.x,
                 y: this.currentTouch.y,
                 duration: this.duration
             });
 
-            if (this.swipeLog.stack.length > 4) {
+            if (this.swipeLog.stack.length > this.swipeLogStackMaxLength) {
                 this.swipeLog.stack.shift();
             }
 
             // Time between first and last logged movement
-            this.swipeLog.stackLength = this.swipeLog.stack.length;
             this.swipeLog.duration = this.swipeLog.stack[this.swipeLog.stack.length-1].duration - this.swipeLog.stack[0].duration;
             this.swipeLog.width = Math.abs(this.swipeLog.stack[this.swipeLog.stack.length-1].x - this.swipeLog.stack[0].x);
             this.swipeLog.height = Math.abs(this.swipeLog.stack[this.swipeLog.stack.length-1].y - this.swipeLog.stack[0].y);
         },
 
         /**
-         * Get swipe direction
+         * Atgriežam virzienu vienalga kādā virzienā. Vai horizontal vai vertical.
+         * Pirmo pārbaudām vertikālo virzienu. Ja tā nav, tad horizontālo
          */
         getDirection: function() {
+            if (this.getVerticalDirection()) {
+                return this.getVerticalDirection();
+            }
+            else if (this.getHorizontalDirection()) {
+                return this.getHorizontalDirection();
+            }
+        },
+
+        /**
+         * Atgriežam tikai horizontālo virzienu: left or right
+         */
+        getHorizontalDirection: function() {
+            if (this.currentTouch.x > this.startTouch.x) {
+                return "right";
+            }
+            else if (this.currentTouch.x < this.startTouch.x) {
+                return "left";
+            }
+
+            return false;
+        },
+
+        /**
+         * Atgriežam tikai vertikālo virzienu: up or down
+         */
+        getVerticalDirection: function() {
             /**
              * Horizontal swipe elevation
              * When swiping left right there van be slight elveation, but this
@@ -379,21 +421,30 @@
             else if (e < -this.slopeFactor) {
                 return "down";
             }
-            else if (this.currentTouch.x > this.startTouch.x) {
-                return "right";
-            }
-            else if (this.currentTouch.x < this.startTouch.x) {
-                return "left";
-            }
+
+            return false;
         },
 
-        /**
-         * Nosakām vai kustība ir tīrs swipe bez pauzēm. 
-         * Varbūt pauze var būt kustības vidū, bet kustībai ir jābeidzas ar swipe
-         */
-        getIsSwipe: function() {
+        getMoveDirection: function() {
+            if (this.isHorizontalDirection()) {
+                return 'horizontal';
+            }
             
+            if (this.isVerticalDirection()) {
+                return 'vertical';
+            }
+
+            return '';
         },
+
+        isHorizontalDirection: function() {
+            return (this.direction == "left" || this.direction == "right");
+        },
+
+        isVerticalDirection: function() {
+            return (this.direction == "up" || this.direction == "down");
+        },
+
 
         /**
          * Get touch object from event
@@ -548,7 +599,7 @@
             }
 
             var defConfig = {
-                direction:  {value: false, type: 'string'},
+                direction:  {value: '', type: 'string'},
 
                 minWidth: {value: false, type: 'int'},
                 minHeight: {value: false, type: 'int'},
