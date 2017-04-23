@@ -284,10 +284,8 @@
          * There also can be checked, if user is scrolling page
          */
         isValidMove: function() {
-            var valid = true;
-
             // Ja swipeLog nav pilns, tad nevaram vēl validēt move
-            if (!this.isSwipeStackReady()) {
+            if (this.swipeLog.stack.length < 2) {
                 return false;
             }
 
@@ -331,13 +329,6 @@
             }
 
             return true;
-        },
-
-        /**
-         * Vai swipe log stackā ir pietiekami daudz elementu
-         */
-        isSwipeStackReady: function() {
-            return this.swipeLog.stack.length >= this.swipeLogStackMaxLength;
         },
 
         /**
@@ -615,6 +606,18 @@
             // Append defaults
             for (var p in defConfig) {
                 this._config[p] = typeof config[p] == 'undefined' ? defConfig[p].value : formatValue(config[p], defConfig[p].type);
+            }
+
+
+            // Pievienojam touch-action
+            switch (this._config.direction) {
+                case 'horizontal':
+                    this.el.style.touchAction = 'pan-y';
+                    break;
+                case 'vertical':
+                    this.el.style.touchAction = 'pan-x';
+                    break;
+                default: this.el.style.touchAction = 'none';
             }
         },
 
