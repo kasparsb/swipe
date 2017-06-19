@@ -403,13 +403,15 @@
              * When swiping left right there van be slight elveation, but this
              * does not mean user is swiping up or down
              */
-            var e = this.offset.y / this.offset.x;
+            if (this.offset) {
+                var e = this.offset.y / this.offset.x;
 
-            if (e > this.slopeFactor) {
-                return "up";
-            }
-            else if (e < -this.slopeFactor) {
-                return "down";
+                if (e > this.slopeFactor) {
+                    return "up";
+                }
+                else if (e < -this.slopeFactor) {
+                    return "down";
+                }
             }
 
             return false;
