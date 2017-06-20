@@ -440,7 +440,7 @@
 
         /**
          * Get touch object from event
-         * We nned only x, y coordinates and time of touch
+         * We need only x, y coordinates and time of touch
          */
         getTouch: function(ev) {
             var t = false;
