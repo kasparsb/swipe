@@ -14,6 +14,24 @@
 
     var instances = 0;
 
+    var List = function(items) {
+        this.items = items;
+    }
+    List.prototype = {
+        first: function() {
+            if (this.items.length > 0) {
+                return this.items[0];
+            }
+            return false;
+        },
+        second: function() {
+            if (this.items.length > 1) {
+                return this.items[1];
+            }
+            return false;
+        }
+    }
+
     var Swipe = function(el, config) {
         this.instanceId = instances++;
 
@@ -24,7 +42,7 @@
         this.el = el;
 
         this.events = this.prepareEvents(
-            ["swipe", "move", "start", "end", "touchend", "touchmove", "pinch"]
+            ['swipe', 'move', 'start', 'end', 'pinch', 'touchend', 'touchmove']
         );
 
         // Apply configuration
@@ -37,11 +55,11 @@
         // Slope factor to distinguise vertical swipe from horizontal
         this.slopeFactor = 1;
         // First touch when touch start occures
-        this.startTouch = false;
+        this.startTouches = false;
         // First touch when first move event triggered
-        this.firstMoveTouch = false;
+        this.firstMoveTouches = false;
         // Current touch, when swipe is in process
-        this.currentTouch = undefined;
+        this.currentTouches = false;
 
         // Swipe width
         this.width;
@@ -93,10 +111,6 @@
             var start = function(ev) {
                 mthis.registerTouches(ev);
 
-                log(mthis.touchesCount, mthis.objProps(mthis.touches).join(' '));
-                console.log(mthis.touches);
-
-
                 mthis.isTouchedValidElement = mthis.touchesCount > 0;
                 if (mthis.isTouchedValidElement) {
                     mthis._start(ev);
@@ -106,8 +120,6 @@
             var end = function(ev) {
                 mthis.unregisterTouches(ev);
 
-                console.log(mthis.touches);
-
                 if (mthis.touchesCount > 0) {
                     log(mthis.touchesCount, mthis.objProps(mthis.touches).join(' '));    
                 }
@@ -116,16 +128,14 @@
                 }
                 
 
-                // if (mthis.isTouchedValidElement) {
-                //     mthis._end(ev);
-                //     mthis.isTouchedValidElement = false;
-                // }
+                if (mthis.isTouchedValidElement) {
+                    mthis._end(ev);
+                    mthis.isTouchedValidElement = false;
+                }
             }
 
             var move = function(ev) {
-                //mthis.registerTouches(ev);
-
-                //console.log(mthis.touches);
+                mthis.registerTouches(ev);
                 
                 if (mthis.isTouchedValidElement) {
                     mthis._move(ev);
@@ -185,26 +195,27 @@
          * Touch start. When touch starts or when mouse down
          */
         _start: function(ev) {
-            console.log('_start');
-            this.startTouch = this.getTouch(ev);
-            this.firstMoveTouch = false;
+            // Touch stāvoklis pašā sākumā
+            this.startTouches = this.getTouches();
+
+            // Touch stāvoklis, kad notika pirmais touchMove
+            this.firstMoveTouches = false;
+
             this.validMove = false;
             this.moveDirection = null;
             this.swipeLog.stack = [];
 
-            this.fire("start", [this.startTouch]);
+            this.fire("start", [this.startTouches.first()]);
         },
 
         /**
          * Touch ends
          */
         _end: function(ev) {
-            console.log('_end');
-            this.currentTouch = this.getTouch(ev);
+            this.currentTouches = this.getTouches();
 
             this.trackDuration();
             this.trackSwipe();
-            //this.trackMovment(); //Šajā mirklī tas ir lieki
 
             var movement = this.formatMovement();
 
@@ -232,8 +243,8 @@
             movement.isSwipe = movement._swipeLog.isSwipe;
 
 
-            this.startTouch = false;
-            this.firstMoveTouch = false;
+            this.startTouches = false;
+            this.firstMoveTouches = false;
 
             if (this.validMove) {
                 this.fire("end", [movement]);
@@ -250,18 +261,16 @@
             
 
             // Check for startTouch when fired mousemove event
-            if (this.startTouch) {
+            if (this.startTouches) {
 
                 // If configured to disable pinch to zoom
-                if (this._config.disablePinch && this.touchesCount >= 2) {
-                    ev.preventDefault();
+                this.maybePreventPinch(ev);
+
+                if (!this.firstMoveTouches) {
+                    this.firstMoveTouches = this.getTouches();
                 }
 
-                if (!this.firstMoveTouch) {
-                    this.firstMoveTouch = this.getTouch(ev);
-                }
-
-                this.currentTouch = this.getTouch(ev);
+                this.currentTouches = this.getTouches();
 
                 this.trackDuration();
                 this.trackSwipe();
@@ -269,6 +278,9 @@
 
                 // Always retranslate touchmove if there was move
                 this.fireTouchMove();
+
+                // retranslate pinch
+                this.maybeFirePinch();
 
                 if (this.isValidMove()) {
                     this.preventEvent(ev);
@@ -279,8 +291,38 @@
                 }
                 
                 if (this.validMove) {
-                    this.fire("move", [this.formatMovement()])
+                    this.fire('move', [this.formatMovement()])
                 }
+            }
+        },
+
+        maybePreventPinch: function(ev) {
+            if (this._config.disablePinch && this.touchesCount >= 2) {
+                ev.preventDefault();
+            }
+        },
+
+        maybeFirePinch: function() {
+            if (this.touchesCount < 2) {
+                return;
+            }
+
+            // Pinch gadījumā interesē tikai 2 currentTouches
+            this.fire('pinch', [this.formatPinch(
+                this.currentTouches.first().x,
+                this.currentTouches.second().x,
+                this.currentTouches.first().y,
+                this.currentTouches.second().y
+            )])
+        },
+
+        formatPinch: function(x1, x2, y1, y2) {
+            return {
+                width: Math.abs(x1-x2),
+                height: Math.abs(y1-y2),
+                // Atālums starp touchiem. Hipotenūza, kur width un height ir taisnleņķa katetes
+                // Aprēķinām pēc pitagora teorēmas distance = sqrt(pow(width, 2) + pow(height, 2))
+                distance: Math.sqrt(Math.pow(Math.abs(x1-x2), 2) + Math.pow(Math.abs(y1-y2), 2))
             }
         },
 
@@ -292,9 +334,9 @@
                 duration: this.duration,
                 width: this.width,
                 height: this.height,
-                x: this.currentTouch.x,
-                y: this.currentTouch.y,
-                touchedElement: this.currentTouch.touchedElement,
+                x: this.currentTouches.first().x,
+                y: this.currentTouches.first().y,
+                touchedElement: this.currentTouches.first().touchedElement,
 
                 speed: this.width / this.duration,
                 realDirection: this.direction
@@ -371,8 +413,8 @@
          */
         trackMovment: function() {
             this.offset = {
-                x: this.currentTouch.x - this.firstMoveTouch.x,
-                y: this.currentTouch.y - this.firstMoveTouch.y
+                x: this.currentTouches.first().x - this.firstMoveTouches.first().x,
+                y: this.currentTouches.first().y - this.firstMoveTouches.first().y
             };
             this.width = Math.abs(this.offset.x);
             this.height = Math.abs(this.offset.y);
@@ -381,14 +423,14 @@
         },
 
         trackDuration: function() {
-            this.duration = this.currentTouch.t - this.startTouch.t;
+            this.duration = this.currentTouches.first().t - this.startTouches.first().t;
         },
 
         trackSwipe: function() {
             // Uzkrājam pēdējās this.swipeLogStackMaxLength move kustības. No tām tiks noteikts vai ir bijis swipe
             this.swipeLog.stack.push({
-                x: this.currentTouch.x,
-                y: this.currentTouch.y,
+                x: this.currentTouches.first().x,
+                y: this.currentTouches.first().y,
                 duration: this.duration
             });
 
@@ -419,10 +461,10 @@
          * Atgriežam tikai horizontālo virzienu: left or right
          */
         getHorizontalDirection: function() {
-            if (this.currentTouch.x > this.startTouch.x) {
+            if (this.currentTouches.first().x > this.startTouches.first().x) {
                 return "right";
             }
-            else if (this.currentTouch.x < this.startTouch.x) {
+            else if (this.currentTouches.first().x < this.startTouches.first().x) {
                 return "left";
             }
 
@@ -510,10 +552,16 @@
                 return false;
             }
 
+            
+            // Update
             if (this.isTouchRegistered(touch)) {
+                this.touches[touch.identifier] = touch;
+                this.touches[touch.identifier].touchedElement = touchedElement;
+
                 return false;
             }
 
+            // Insert new
             this.touches[touch.identifier] = touch;
             this.touches[touch.identifier].touchedElement = touchedElement;
 
@@ -557,6 +605,16 @@
             }
 
             return t;
+        },
+
+        /**
+         * Atgriežam touches kopiju uz doto mirkli
+         */
+        getTouches: function() {
+            var mthis = this;
+            return new List(this.map(this.touches, function(touch){
+                return mthis.clone(touch);
+            }))
         },
 
         formatTouch: function(ev) {
@@ -730,6 +788,26 @@
             for (var name in obj) {
                 if (obj.hasOwnProperty(name)) {
                     r.push(name);
+                }
+            }
+            return r;
+        },
+
+        map: function(obj, cb) {
+            var r = [];
+            for (var name in obj) {
+                if (obj.hasOwnProperty(name)) {
+                    r.push(cb(obj[name], obj));
+                }
+            }
+            return r;
+        },
+
+        clone: function(obj) {
+            var r = {};
+            for (var name in obj) {
+                if (obj.hasOwnProperty(name)) {
+                    r[name] = obj[name];
                 }
             }
             return r;
