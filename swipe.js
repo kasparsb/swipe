@@ -32,8 +32,8 @@
 
         // Visi reģistrētie touchi, pēc to identifikatoriem
         this.touches = {};
-        // Allowed touches count. When swiping we need only one touch
-        this.touchesCount = 1;
+        // Piereģistrēto touch skaits
+        this.touchesCount = 0;
         // Slope factor to distinguise vertical swipe from horizontal
         this.slopeFactor = 1;
         // First touch when touch start occures
@@ -93,27 +93,39 @@
             var start = function(ev) {
                 mthis.registerTouches(ev);
 
+                log(mthis.touchesCount, mthis.objProps(mthis.touches).join(' '));
                 console.log(mthis.touches);
 
 
-                mthis.isTouchedValidElement = false;
-                if (mthis.isTheElement(mthis.eventTarget(ev))) {
-                    mthis.isTouchedValidElement = true;
+                mthis.isTouchedValidElement = mthis.touchesCount > 0;
+                if (mthis.isTouchedValidElement) {
                     mthis._start(ev);
                 }
             }
             
             var end = function(ev) {
-                if (mthis.isTouchedValidElement) {
-                    mthis._end(ev);
-                    mthis.isTouchedValidElement = false;
+                mthis.unregisterTouches(ev);
+
+                console.log(mthis.touches);
+
+                if (mthis.touchesCount > 0) {
+                    log(mthis.touchesCount, mthis.objProps(mthis.touches).join(' '));    
                 }
+                else {
+                    log('notouches');
+                }
+                
+
+                // if (mthis.isTouchedValidElement) {
+                //     mthis._end(ev);
+                //     mthis.isTouchedValidElement = false;
+                // }
             }
 
             var move = function(ev) {
-                mthis.registerTouches(ev);
+                //mthis.registerTouches(ev);
 
-                console.log(mthis.touches);
+                //console.log(mthis.touches);
                 
                 if (mthis.isTouchedValidElement) {
                     mthis._move(ev);
@@ -123,14 +135,14 @@
             
             // Ja izpildīsies touchstart, tad mouse eventus vairāk neklausāmies
             var touchStart = function(ev) {
-                console.log('_touchStart');
+                log('_touchStart');
 
                 mthis.isTouchEvents = true;
                 start(ev);
             }
 
             var touchEnd = function(ev) {
-                console.log('_touchEnd');
+                log('_touchEnd');
                 end(ev);
             }
 
@@ -235,10 +247,15 @@
          * Touch is moving. Moving when mouse down
          */
         _move: function(ev) {
-            this.getPinch(ev);
+            
 
             // Check for startTouch when fired mousemove event
             if (this.startTouch) {
+
+                // If configured to disable pinch to zoom
+                if (this._config.disablePinch && this.touchesCount >= 2) {
+                    ev.preventDefault();
+                }
 
                 if (!this.firstMoveTouch) {
                     this.firstMoveTouch = this.getTouch(ev);
@@ -455,17 +472,66 @@
             return (this.direction == "up" || this.direction == "down");
         },
 
+        /**
+         * Reģistrējam tikai tos touch, kuri nāk no iekonfigurētā elementa
+         */
         registerTouches: function(ev) {
             if (ev.changedTouches) {
                 for (var i = 0; i < ev.changedTouches.length; i++) {
-                    this.touches[ev.changedTouches[i].identifier] = this.formatTouch(ev.changedTouches[i]);
-                    this.touches[ev.changedTouches[i].identifier].touchedElement = this.eventTarget(ev);
+                    if (this.registerTouch(this.formatTouch(ev.changedTouches[i]), this.eventTarget(ev.changedTouches[i]))) {
+                        this.touchesCount++;
+                    }
                 }
             }
             else {
-                this.touches['_faketouch'] = this.formatTouch(ev);
-                this.touches['_faketouch'].touchedElement = this.eventTarget(ev);
+                if (this.registerTouch(this.formatTouch(ev), this.eventTarget(ev))) {
+                    this.touchesCount++;
+                }
             }
+        },
+
+        unregisterTouches: function(ev) {
+            if (ev.changedTouches) {
+                for (var i = 0; i < ev.changedTouches.length; i++) {
+                    if (this.unregisterTouch(ev.changedTouches[i].identifier)) {
+                        this.touchesCount--;
+                    }
+                }
+            }
+            else {
+                if (this.unregisterTouch('_faketouch')) {
+                    this.touchesCount--;
+                }
+            }
+        },
+
+        registerTouch: function(touch, touchedElement) {
+            if (!this.isTheElement(touchedElement)) {
+                return false;
+            }
+
+            if (this.isTouchRegistered(touch)) {
+                return false;
+            }
+
+            this.touches[touch.identifier] = touch;
+            this.touches[touch.identifier].touchedElement = touchedElement;
+
+            return true;
+        },
+
+        unregisterTouch: function(identifier) {
+            if (typeof this.touches[identifier] != 'undefined') {
+                delete this.touches[identifier];
+
+                return true;
+            }
+
+            return false;
+        },
+
+        isTouchRegistered: function(touch) {
+            return (typeof this.touches[touch.identifier] != 'undefined');
         },
 
         /**
@@ -493,29 +559,9 @@
             return t;
         },
 
-        /**
-         * Touch ar 2 punktiem
-         */
-        getPinch: function(ev) {
-            //console.log(ev.changedTouches[0].identifier + (ev.changedTouches.length > 1 ? '   '+ev.changedTouches[1].identifier : ''));
-            
-            
-
-
-            if (!ev.changedTouches || ev.changedTouches.length < 2) {
-                return false;
-            }
-
-            return {
-                first: p.push(this.formatTouch(ev.changedTouches[0])),
-                second: p.push(this.formatTouch(ev.changedTouches[1])),
-                touchedElement: this.eventTarget(ev)
-            }
-        },
-
         formatTouch: function(ev) {
             return {
-                identifier: typeof ev.identifier == 'unefined' ? '_faketouch' : ev.identifier,
+                identifier: (typeof ev.identifier == 'undefined' ? '_faketouch' : ev.identifier),
                 x: typeof ev.pageX == 'undefined' ? ev.x : ev.pageX,
                 y: typeof ev.pageY == 'undefined' ? ev.y : ev.pageY,
                 t: new Date().getTime()
@@ -644,7 +690,9 @@
 
                 maxWidth: {value: false, type: 'int'},
                 maxHeight: {value: false, type: 'int'},
-                maxDuration: {value: false, type: 'int'}
+                maxDuration: {value: false, type: 'int'},
+
+                disablePinch: false
             }
 
             // Init empty config
@@ -675,6 +723,16 @@
             // Remove all event listeners
             this.handleEvents('remove');
             this.events = [];
+        },
+
+        objProps: function(obj) {
+            var r = [];
+            for (var name in obj) {
+                if (obj.hasOwnProperty(name)) {
+                    r.push(name);
+                }
+            }
+            return r;
         }
     }
 

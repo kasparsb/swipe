@@ -8,9 +8,9 @@
     body {
         height: 100%;
         padding: 0;
+        margin: 0;
     }
     .block {
-        width: 90%;
         height: 200px;
         background: #00cf26;
     }
@@ -29,10 +29,17 @@
     $log = $('.log');
 
     function log(p1, p2) {
-        $log.append('<div>'+p1+' '+p2+'</div>');
+        var p = [];
+        if (typeof p1 != 'undefined') {
+            p.push(p1);
+        }
+        if (typeof p2 != 'undefined') {
+            p.push(p2);
+        }
+        $log.append('<div>'+p.join(' ')+'</div>');
     }
 
-    var swipe = new webit.swipe($el.get(0), {})
+    var swipe = new webit.swipe($el.get(0), {disablePinch: true})
         .on('move', function(t){
             log('swipe', t.offset.x)
         });
