@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en-EN" prefix="og: http://ogp.me/ns#">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no">
+    <style>
+    html,
+    body {
+        height: 100%;
+        padding: 0;
+    }
+    .block {
+        width: 90%;
+        height: 200px;
+        background: #00cf26;
+    }
+    </style>
+</head>
+<body>
+    <div class="block"></div>
+    <div class="log"></div>
+
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script type="text/javascript" src="../swipe.js"></script>
+    <script>
+    var $log, $el;
+    
+    $el = $('.block');
+    $log = $('.log');
+
+    function log(p1, p2) {
+        $log.append('<div>'+p1+' '+p2+'</div>');
+    }
+
+    var swipe = new webit.swipe($el.get(0), {})
+        .on('move', function(t){
+            log('swipe', t.offset.x)
+        });
+
+    
+    </script>
+</body>
+</html>

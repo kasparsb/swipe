@@ -24,12 +24,14 @@
         this.el = el;
 
         this.events = this.prepareEvents(
-            ["swipe", "move", "start", "end", "touchend", "touchmove"]
+            ["swipe", "move", "start", "end", "touchend", "touchmove", "pinch"]
         );
 
         // Apply configuration
         this.config(config);
 
+        // Visi reģistrētie touchi, pēc to identifikatoriem
+        this.touches = {};
         // Allowed touches count. When swiping we need only one touch
         this.touchesCount = 1;
         // Slope factor to distinguise vertical swipe from horizontal
@@ -89,6 +91,11 @@
             var mthis = this;
 
             var start = function(ev) {
+                mthis.registerTouches(ev);
+
+                console.log(mthis.touches);
+
+
                 mthis.isTouchedValidElement = false;
                 if (mthis.isTheElement(mthis.eventTarget(ev))) {
                     mthis.isTouchedValidElement = true;
@@ -104,6 +111,10 @@
             }
 
             var move = function(ev) {
+                mthis.registerTouches(ev);
+
+                console.log(mthis.touches);
+                
                 if (mthis.isTouchedValidElement) {
                     mthis._move(ev);
                 }
@@ -112,11 +123,14 @@
             
             // Ja izpildīsies touchstart, tad mouse eventus vairāk neklausāmies
             var touchStart = function(ev) {
+                console.log('_touchStart');
+
                 mthis.isTouchEvents = true;
                 start(ev);
             }
 
             var touchEnd = function(ev) {
+                console.log('_touchEnd');
                 end(ev);
             }
 
@@ -159,6 +173,7 @@
          * Touch start. When touch starts or when mouse down
          */
         _start: function(ev) {
+            console.log('_start');
             this.startTouch = this.getTouch(ev);
             this.firstMoveTouch = false;
             this.validMove = false;
@@ -172,6 +187,7 @@
          * Touch ends
          */
         _end: function(ev) {
+            console.log('_end');
             this.currentTouch = this.getTouch(ev);
 
             this.trackDuration();
@@ -219,6 +235,8 @@
          * Touch is moving. Moving when mouse down
          */
         _move: function(ev) {
+            this.getPinch(ev);
+
             // Check for startTouch when fired mousemove event
             if (this.startTouch) {
 
@@ -437,6 +455,18 @@
             return (this.direction == "up" || this.direction == "down");
         },
 
+        registerTouches: function(ev) {
+            if (ev.changedTouches) {
+                for (var i = 0; i < ev.changedTouches.length; i++) {
+                    this.touches[ev.changedTouches[i].identifier] = this.formatTouch(ev.changedTouches[i]);
+                    this.touches[ev.changedTouches[i].identifier].touchedElement = this.eventTarget(ev);
+                }
+            }
+            else {
+                this.touches['_faketouch'] = this.formatTouch(ev);
+                this.touches['_faketouch'].touchedElement = this.eventTarget(ev);
+            }
+        },
 
         /**
          * Get touch object from event
@@ -447,10 +477,7 @@
             var changedTouches = ev.changedTouches;
             
             if (changedTouches) {
-                // Allow only defined number of touches
-                if (changedTouches.length == this.touchesCount) {
-                    t = changedTouches[0];
-                }
+                t = changedTouches[0];
             }
             else {
                 t = ev;
@@ -466,13 +493,31 @@
             return t;
         },
 
-        formatTouch: function(ev) {
-            var x = typeof ev.pageX == 'undefined' ? ev.x : ev.pageX;
-            var y = typeof ev.pageY == 'undefined' ? ev.y : ev.pageY;
+        /**
+         * Touch ar 2 punktiem
+         */
+        getPinch: function(ev) {
+            //console.log(ev.changedTouches[0].identifier + (ev.changedTouches.length > 1 ? '   '+ev.changedTouches[1].identifier : ''));
+            
+            
 
-            return { 
-                x: x,
-                y: y,
+
+            if (!ev.changedTouches || ev.changedTouches.length < 2) {
+                return false;
+            }
+
+            return {
+                first: p.push(this.formatTouch(ev.changedTouches[0])),
+                second: p.push(this.formatTouch(ev.changedTouches[1])),
+                touchedElement: this.eventTarget(ev)
+            }
+        },
+
+        formatTouch: function(ev) {
+            return {
+                identifier: typeof ev.identifier == 'unefined' ? '_faketouch' : ev.identifier,
+                x: typeof ev.pageX == 'undefined' ? ev.x : ev.pageX,
+                y: typeof ev.pageY == 'undefined' ? ev.y : ev.pageY,
                 t: new Date().getTime()
             }
         },
