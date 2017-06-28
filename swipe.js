@@ -118,12 +118,12 @@
             }
             
             var end = function(ev) {
-                mthis.unregisterTouches(ev);
-
                 if (mthis.isTouchedValidElement) {
                     mthis._end(ev);
                     mthis.isTouchedValidElement = false;
                 }
+
+                mthis.unregisterTouches(ev);
             }
 
             var move = function(ev) {
