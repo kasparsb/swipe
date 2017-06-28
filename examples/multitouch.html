@@ -41,7 +41,16 @@
 
     var swipe = new webit.swipe($el.get(0), {disablePinch: true})
         .on('move', function(t){
-            log('swipe', t.offset.x)
+            //console.log(t);
+            // log('swipe', [
+            //     t.direction, 
+            //     t.offset.x, 
+            //     t.offset.y,
+            //     t.realDirection
+            // ].join('|'))
+        })
+        .on('pinch', function(t){
+            log(t.distance);
         });
 
     

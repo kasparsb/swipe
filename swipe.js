@@ -42,7 +42,7 @@
         this.el = el;
 
         this.events = this.prepareEvents(
-            ['swipe', 'move', 'start', 'end', 'pinch', 'touchend', 'touchmove']
+            ['swipe', 'move', 'start', 'end', 'pinchstart', 'pinchend', 'pinchmove', 'touchend', 'touchmove']
         );
 
         // Apply configuration
@@ -120,14 +120,6 @@
             var end = function(ev) {
                 mthis.unregisterTouches(ev);
 
-                if (mthis.touchesCount > 0) {
-                    log(mthis.touchesCount, mthis.objProps(mthis.touches).join(' '));    
-                }
-                else {
-                    log('notouches');
-                }
-                
-
                 if (mthis.isTouchedValidElement) {
                     mthis._end(ev);
                     mthis.isTouchedValidElement = false;
@@ -145,14 +137,11 @@
             
             // Ja izpildīsies touchstart, tad mouse eventus vairāk neklausāmies
             var touchStart = function(ev) {
-                log('_touchStart');
-
                 mthis.isTouchEvents = true;
                 start(ev);
             }
 
             var touchEnd = function(ev) {
-                log('_touchEnd');
                 end(ev);
             }
 
@@ -205,7 +194,10 @@
             this.moveDirection = null;
             this.swipeLog.stack = [];
 
-            this.fire("start", [this.startTouches.first()]);
+            this.fire('start', [this.startTouches.first()]);
+
+            // retranslate pinch
+            this.maybeFirePinchStart();
         },
 
         /**
@@ -252,6 +244,9 @@
 
             // Vienmēr izpildām touchend eventu
             this.fire("touchend", [movement]);
+
+            // retranslate pinch
+            this.maybeFirePinchEnd();
         },
 
         /**
@@ -279,9 +274,6 @@
                 // Always retranslate touchmove if there was move
                 this.fireTouchMove();
 
-                // retranslate pinch
-                this.maybeFirePinch();
-
                 if (this.isValidMove()) {
                     this.preventEvent(ev);
                     this.validMove = true;
@@ -293,6 +285,9 @@
                 if (this.validMove) {
                     this.fire('move', [this.formatMovement()])
                 }
+
+                // retranslate pinch
+                this.maybeFirePinchMove();
             }
         },
 
@@ -302,22 +297,53 @@
             }
         },
 
-        maybeFirePinch: function() {
+        maybeFirePinchStart: function() {
+            if (this.touchesCount < 2) {
+                return;
+            }
+
+            this.fire('pinchstart', [this.formatPinch(
+                this.startTouches.first().x,
+                this.startTouches.second().x,
+                this.startTouches.first().y,
+                this.startTouches.second().y
+            )]);
+        },
+
+        maybeFirePinchEnd: function() {
+            if (this.touchesCount < 2) {
+                this.fire('pinchend', []);
+            }
+        },
+
+        maybeFirePinchMove: function() {
             if (this.touchesCount < 2) {
                 return;
             }
 
             // Pinch gadījumā interesē tikai 2 currentTouches
-            this.fire('pinch', [this.formatPinch(
-                this.currentTouches.first().x,
-                this.currentTouches.second().x,
-                this.currentTouches.first().y,
-                this.currentTouches.second().y
-            )])
+            this.fire('pinchmove', [{
+                first: this.formatPinch(
+                    this.firstMoveTouches.first().x,
+                    this.firstMoveTouches.second().x,
+                    this.firstMoveTouches.first().y,
+                    this.firstMoveTouches.second().y
+                ),
+                current: this.formatPinch(
+                    this.currentTouches.first().x,
+                    this.currentTouches.second().x,
+                    this.currentTouches.first().y,
+                    this.currentTouches.second().y
+                )
+            }])
         },
 
         formatPinch: function(x1, x2, y1, y2) {
             return {
+                x1: x1,
+                x2: x2,
+                y1: y1,
+                y2: y2,
                 width: Math.abs(x1-x2),
                 height: Math.abs(y1-y2),
                 // Atālums starp touchiem. Hipotenūza, kur width un height ir taisnleņķa katetes

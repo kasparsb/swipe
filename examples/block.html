@@ -30,18 +30,31 @@
     3<br />
     4<br />
     5<br />
+    <div class="log"></div>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
     <script type="text/javascript" src="../swipe.js"></script>
     <script>
-    jQuery(function($){
+        var $ = jQuery;
         var $el = $('.block');
         var el = $el.get(0);
+        var $log = $('.log');
 
         var startPos, currentOffset, isStarted=false;
 
         startPos = {
             x: 0,
             y: 0
+        }
+
+        function log(p1, p2) {
+            var p = [];
+            if (typeof p1 != 'undefined') {
+                p.push(p1);
+            }
+            if (typeof p2 != 'undefined') {
+                p.push(p2);
+            }
+            $log.append('<div>'+p.join(' ')+'</div>');
         }
 
         function start() {
@@ -67,17 +80,21 @@
                 var x = startPos.x + currentOffset.x;
                 var y = startPos.y + currentOffset.y;
 
-                el.style.transform = 'translate3d('+x+'px,'+y+'px,0)';
+                $(el).css('transform', 'translate3d('+x+'px,'+y+'px,0)');
+                //el.style.transform = 'translate3d('+x+'px,'+y+'px,0)';
+                //el.style['-webkit-transform'] = 'translate3d('+x+'px,'+y+'px,0)';
             }
         }
 
         swipe = new webit.swipe(el, {})
             .on("start", function(t){
-                console.log('start', window.performance.now());
-                
+                //console.log('start', window.performance.now());
+                log('start');
                 start();
             })
             .on("end", function(t){
+                log('end');
+
                 stop();
 
                 startPos.x = startPos.x + currentOffset.x;
@@ -86,13 +103,12 @@
                 currentOffset = null;
             })
             .on("move", function(t){
-                console.log('move', window.performance.now());
+                //console.log('move', window.performance.now());
 
                 currentOffset = t.offset;
 
                 _p();
             });
-    })
     </script>
 </body>
 </html>
