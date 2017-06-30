@@ -91,6 +91,8 @@
          */
         this.isTouchedValidElement = false;
 
+        this.isMouseDown = false;
+
         this.handleEvents('add');
 
         return this;
@@ -109,6 +111,7 @@
             var mthis = this;
 
             var start = function(ev) {
+                // Reģistrēti tiek tikai tie touchi, kuri nāk no iekonfigurētā elementa
                 mthis.registerTouches(ev);
 
                 mthis.isTouchedValidElement = mthis.touchesCount > 0;
@@ -152,6 +155,7 @@
 
             // Ja ir toucheventi, tad mouse eventus neizpildām
             var mouseStart = function(ev) {
+                mthis.isMouseDown = true;
                 if (!mthis.isTouchEvents) {
                     start(ev)   
                 }
@@ -161,11 +165,14 @@
                 if (!mthis.isTouchEvents) {
                     end(ev) 
                 }
+                mthis.isMouseDown = false;
             }
 
             var mouseMove = function(ev) {
                 if (!mthis.isTouchEvents) {
-                    move(ev)
+                    if (mthis.isMouseDown) {
+                        move(ev)    
+                    }
                 }
             }
 
@@ -186,6 +193,7 @@
         _start: function(ev) {
             // Touch stāvoklis pašā sākumā
             this.startTouches = this.getTouches();
+            console.log(this.touches);
 
             // Touch stāvoklis, kad notika pirmais touchMove
             this.firstMoveTouches = false;
