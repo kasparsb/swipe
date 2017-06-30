@@ -12,8 +12,8 @@
     }
     .block-c {
         margin: 200px auto 0;
-        width: 100px;
-        height: 100px;
+        width: 300px;
+        height: 300px;
         position: relative;
         border: 2px solid green;
     }
@@ -26,24 +26,225 @@
         transform-origin: 0 0;
         border: 2px solid red;
         box-sizing: border-box;
-        transform: translate(-100px,-100px) scale(1);
     }
-    .block:after {
-        content: ' ';
+    .pin {
         position: absolute;
         display: block;
-        width: 2px;
-        height: 2px;
+        width: 8px;
+        height: 8px;
         overflow: hidden;
         background: pink;
-        top: 20px;
-        left: 20px;
+        top: 0;
+        left: 0;
+
+        z-index: 100
+    }
+    .pin2 {
+        position: absolute;
+        display: block;
+        width: 16px;
+        height: 16px;
+        overflow: hidden;
+        background: blue;
+        top: 0;
+        left: 0;
+
+        z-index: 90
+    }
+    .scale {
+        position: absolute;
+        left: 30px;
+        top: 30px;
+    }
+    .scale input {
+        width: 70px;
     }
     </style>
 </head>
 <body>
-    <div class="block-c">
-        <div class="block"></div>
+    <div class="scale">
+        <input type="range" name="scale" value="1" min="1" max="4" step="0.5" /><br />
+        <input type="text" name="xoffset" value="-50" /><br />
+        <input type="text" name="yoffset" value="-40" /><br />
+
+        <button name="setoffsets">setoffsets</button><br />
+
+        <button name="translatecoords">translatecoord</button><br />
+        
+        <input type="text" name="newscale" value="1.5" /><br />
+        <button name="setnewscale">set</button>
     </div>
+
+    <div class="block-c">
+        <span class="pin"></span>
+        <div class="block">
+            <span class="pin2"></span>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script type="text/javascript" src="../swipe.js"></script>
+    <script>
+    var $el = $('.block');
+    var $pin = $('.pin');
+    var $pin2 = $('.pin2');
+
+    var pinPos = {
+        x: 0,
+        y: 0
+    }
+
+    var T = {
+        scale: 1,
+        x: 0,
+        y: 0,
+        px: 0,
+        py: 0
+    }
+
+    var elOffset = $el.offset();
+
+    function setTransform(x, y, pinchX, pinchY, scale) {
+        $el.css('transform', 'translate('+(x+pinchX)+'px,'+(y+pinchY)+'px) scale('+scale+')')
+    }
+
+    function positionPin(x, y) {
+        pinPos.x = x;
+        pinPos.y = y;
+
+        $pin.css({
+            left:pinPos.x+'px',
+            top:pinPos.y+'px'
+        })
+    }
+
+    function positionPin2(x, y) {
+        $pin2.css({
+            left:x+'px',
+            top:y+'px'
+        })
+    }
+
+    function getScale() {
+        return $('[name=scale]').val();
+    }
+
+    function getTranslatedCoords(currentX, currentY, offsetX, offsetY, scale) {
+        // Esošās koordinātes ir jādala ar scale, jo palielinātajā tās būs lielākas
+        var x = currentX/scale;
+        var y = currentY/scale;
+
+        // Atņemam esošo nobīdi
+        x -= offsetX/scale;
+        y -= offsetY/scale;
+
+        return {
+            x: x, 
+            y: y
+        }
+    }
+
+    function setNewScale(newScale) {
+        
+
+        var c1 = getTranslatedCoords(pinPos.x, pinPos.y, T.x+T.px, T.y+T.py, T.scale);
+
+        console.log('newscale', pinPos);
+
+        $el.css('transform-origin', pinPos.x+'px '+pinPos.y+'px');
+
+        T.scale = newScale;
+        setTransform(T.x, T.y, T.px, T.py, T.scale);
+
+
+        // T.px = (c1.x - c1.x*newScale);
+        // T.py = (c1.y - c1.y*newScale);
+        // T.scale = newScale;
+
+
+        // setTransform(T.x, T.y, T.px, T.py, T.scale);
+
+        // console.log(c1.x - c1.x*newScale, c1.y - c1.y*newScale);
+
+        // var dx = c2.x - c1.x;
+        // var dy = c2.y - c1.y;
+
+        // console.log('newscale', dx, dy);
+
+
+        // var dx = (T.x*newScale)/T.scale;
+        // var dy = (T.x*newScale)/T.scale;
+
+        // console.log('newscale', dx, dy);
+
+        // // // Dalām ar current scale
+        // // var dx = (pinPos.x - (c.x/T.scale)) * newScale;
+        // // var dy = (pinPos.y - (c.y/T.scale)) * newScale;
+
+        // // console.log(dx, dy, newScale);
+
+        
+
+        // if (newScale < T.scale) {
+        //     T.x += c1.x;
+        //     T.y += c1.y;
+        // }
+        // else {
+        //     T.x -= c1.x;
+        //     T.y -= c1.y;
+        // }
+        
+
+        // T.scale = newScale;
+
+        // setTransform(T.x, T.y, T.scale);
+    }
+
+    function translateCoords() {
+        console.log('translateCoords', T);
+        var n = getTranslatedCoords(pinPos.x, pinPos.y, T.x+T.px, T.y+T.py, T.scale);
+
+        positionPin2(
+            n.x, 
+            n.y
+        );
+    }
+
+    setTransform(T.x, T.y, T.px, T.py, T.scale);
+
+    var swipe = new webit.swipe($el.get(0), {disablePinch: true});
+    swipe.on('start', function(t){
+        elOffset = $el.offset();
+        positionPin(t.x - elOffset.left, t.y - elOffset.top)
+    })
+
+    $(document).on('change', '[name=scale]', function(ev){
+        T.scale = parseFloat(ev.target.value);
+        setTransform(T.x, T.y, T.px, T.py, T.scale);
+    });
+    $(document).on('click', '[name=translatecoords]', function(ev){
+        ev.preventDefault();
+        translateCoords()
+    })
+    $(document).on('change', '[name=xoffset]', function(ev){
+        T.x = parseInt(ev.target.value, 10);
+        setTransform(T.x, T.y, T.px, T.py, T.scale);
+    })
+    $(document).on('change', '[name=yoffset]', function(ev){
+        T.y = parseInt(ev.target.value, 10);
+        setTransform(T.x, T.y, T.px, T.py, T.scale);
+    })
+    $(document).on('click', '[name=setnewscale]', function(ev){
+        ev.preventDefault();
+        setNewScale(parseFloat($('[name=newscale]').val()))
+    })
+    $(document).on('click', '[name=setoffsets]', function(ev){
+        ev.preventDefault();
+
+        T.x = parseInt($('[name=xoffset]').val(), 10);
+        T.y = parseInt($('[name=yoffset]').val(), 10);
+        setTransform(T.x, T.y, T.px, T.py, T.scale);
+    })
+    </script>
 </body>
 </html>

@@ -193,7 +193,6 @@
         _start: function(ev) {
             // Touch stāvoklis pašā sākumā
             this.startTouches = this.getTouches();
-            console.log(this.touches);
 
             // Touch stāvoklis, kad notika pirmais touchMove
             this.firstMoveTouches = false;
