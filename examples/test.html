@@ -32,7 +32,6 @@
         display: block;
         width: 8px;
         height: 8px;
-        overflow: hidden;
         background: pink;
         top: 0;
         left: 0;
@@ -44,7 +43,6 @@
         display: block;
         width: 16px;
         height: 16px;
-        overflow: hidden;
         background: blue;
         top: 0;
         left: 0;
@@ -63,9 +61,12 @@
 </head>
 <body>
     <div class="scale">
+        <button name="readstats">readstats</button><br />
         <input type="range" name="scale" value="1" min="1" max="4" step="0.5" /><br />
         <input type="text" name="xoffset" value="-50" /><br />
         <input type="text" name="yoffset" value="-40" /><br />
+        px<input type="text" name="pxoffset" value="" /><br />
+        py<input type="text" name="pyoffset" value="" /><br />
 
         <button name="setoffsets">setoffsets</button><br />
 
@@ -103,6 +104,7 @@
     }
 
     var elOffset = $el.offset();
+    var viewportOffset = $('.block-c').offset();
 
     function setTransform(x, y, pinchX, pinchY, scale) {
         $el.css('transform', 'translate('+(x+pinchX)+'px,'+(y+pinchY)+'px) scale('+scale+')')
@@ -115,14 +117,14 @@
         $pin.css({
             left:pinPos.x+'px',
             top:pinPos.y+'px'
-        })
+        }).html(pinPos.x+'x'+pinPos.y)
     }
 
     function positionPin2(x, y) {
         $pin2.css({
             left:x+'px',
             top:y+'px'
-        })
+        }).html(x+'x'+y)
     }
 
     function getScale() {
@@ -144,60 +146,47 @@
         }
     }
 
+    /**
+     * Projicējam viewportā ieklikšīnātās koorinātes uz slide koordinātēm
+     * Slide var būt nobīdīts pa x,y asīm
+     */
+    function getProjectedCoords(viewportX, viewportY, offsetX, offsetY, scale) {
+        // Esošās viewport koordinātes
+        var x = viewportX;
+        var y = viewportY;
+
+        // Atņemam esošo nobīdi
+        x -= offsetX/scale;
+        y -= offsetY/scale;
+
+        return {
+            x: x, 
+            y: y
+        }
+    }
+
     function setNewScale(newScale) {
         
 
-        var c1 = getTranslatedCoords(pinPos.x, pinPos.y, T.x+T.px, T.y+T.py, T.scale);
+        var c = getProjectedCoords(pinPos.x, pinPos.y, T.x, T.y, T.scale);
+        
+        var dx = pinPos.x*T.scale - pinPos.x*newScale;
+        var dy = pinPos.y*T.scale - pinPos.y*newScale;
 
-        console.log('newscale', pinPos);
+        console.log(dx, dy, T.scale, newScale);
 
-        $el.css('transform-origin', pinPos.x+'px '+pinPos.y+'px');
+        T.x = (T.x/T.scale)*newScale;
+        T.y = (T.y/T.scale)*newScale;
+
+        T.x += dx;
+        T.y += dy;
 
         T.scale = newScale;
+        
+        // T.px = dx;
+        // T.py = dy;
+
         setTransform(T.x, T.y, T.px, T.py, T.scale);
-
-
-        // T.px = (c1.x - c1.x*newScale);
-        // T.py = (c1.y - c1.y*newScale);
-        // T.scale = newScale;
-
-
-        // setTransform(T.x, T.y, T.px, T.py, T.scale);
-
-        // console.log(c1.x - c1.x*newScale, c1.y - c1.y*newScale);
-
-        // var dx = c2.x - c1.x;
-        // var dy = c2.y - c1.y;
-
-        // console.log('newscale', dx, dy);
-
-
-        // var dx = (T.x*newScale)/T.scale;
-        // var dy = (T.x*newScale)/T.scale;
-
-        // console.log('newscale', dx, dy);
-
-        // // // Dalām ar current scale
-        // // var dx = (pinPos.x - (c.x/T.scale)) * newScale;
-        // // var dy = (pinPos.y - (c.y/T.scale)) * newScale;
-
-        // // console.log(dx, dy, newScale);
-
-        
-
-        // if (newScale < T.scale) {
-        //     T.x += c1.x;
-        //     T.y += c1.y;
-        // }
-        // else {
-        //     T.x -= c1.x;
-        //     T.y -= c1.y;
-        // }
-        
-
-        // T.scale = newScale;
-
-        // setTransform(T.x, T.y, T.scale);
     }
 
     function translateCoords() {
@@ -210,12 +199,23 @@
         );
     }
 
+    function projectCoords() {
+        var n = getProjectedCoords(pinPos.x, pinPos.y, T.x, T.y, T.scale);
+
+        console.log('projectCoords', n);
+
+        positionPin2(
+            n.x, 
+            n.y
+        );
+    }
+
     setTransform(T.x, T.y, T.px, T.py, T.scale);
 
     var swipe = new webit.swipe($el.get(0), {disablePinch: true});
     swipe.on('start', function(t){
-        elOffset = $el.offset();
-        positionPin(t.x - elOffset.left, t.y - elOffset.top)
+        
+        positionPin(t.x - viewportOffset.left, t.y - viewportOffset.top)
     })
 
     $(document).on('change', '[name=scale]', function(ev){
@@ -224,7 +224,7 @@
     });
     $(document).on('click', '[name=translatecoords]', function(ev){
         ev.preventDefault();
-        translateCoords()
+        projectCoords()
     })
     $(document).on('change', '[name=xoffset]', function(ev){
         T.x = parseInt(ev.target.value, 10);
@@ -244,6 +244,16 @@
         T.x = parseInt($('[name=xoffset]').val(), 10);
         T.y = parseInt($('[name=yoffset]').val(), 10);
         setTransform(T.x, T.y, T.px, T.py, T.scale);
+    })
+    $(document).on('click', '[name=readstats]', function(ev){
+        ev.preventDefault();
+
+        $('[name=xoffset]').val(T.x);
+        $('[name=yoffset]').val(T.y);
+        $('[name=pxoffset]').val(T.px);
+        $('[name=pyoffset]').val(T.py);
+        $('[name=scale]').val(T.scale);
+        
     })
     </script>
 </body>
