@@ -72,8 +72,9 @@
 
         <button name="translatecoords">translatecoord</button><br />
         
-        <input type="text" name="newscale" value="1.5" /><br />
-        <button name="setnewscale">set</button>
+        <input type="range" name="newscale" value="1" min="1" max="2" step="0.1" /><br />
+        <span class="newscale">1</span><br />
+        <button name="setnewscale">setnewscale</button>
     </div>
 
     <div class="block-c">
@@ -103,11 +104,13 @@
         py: 0
     }
 
+    var startTouchCoords;
+
     var elOffset = $el.offset();
     var viewportOffset = $('.block-c').offset();
 
     function setTransform(x, y, pinchX, pinchY, scale) {
-        $el.css('transform', 'translate('+(x+pinchX)+'px,'+(y+pinchY)+'px) scale('+scale+')')
+        $el.css('transform', 'translate('+(x)+'px,'+(y)+'px) scale('+scale+')')
     }
 
     function positionPin(x, y) {
@@ -168,18 +171,40 @@
     function setNewScale(newScale) {
         
 
-        var c = getProjectedCoords(pinPos.x, pinPos.y, T.x, T.y, T.scale);
+        //var c = getProjectedCoords(pinPos.x, pinPos.y, T.x, T.y, T.scale);
         
-        var dx = pinPos.x*T.scale - pinPos.x*newScale;
-        var dy = pinPos.y*T.scale - pinPos.y*newScale;
+        // var dx = pinPos.x*T.scale - pinPos.x*newScale;
+        // var dy = pinPos.y*T.scale - pinPos.y*newScale;
 
-        console.log(dx, dy, T.scale, newScale);
+        var dx = pinPos.x*(T.scale - newScale);
+        var dy = pinPos.y*(T.scale - newScale);
 
-        T.x = (T.x/T.scale)*newScale;
-        T.y = (T.y/T.scale)*newScale;
+
+        // a = c*b - c*d
+        // a = c*(T.scale - newScale)
+
+
+        //console.log('scale, newscale', T.scale, newScale);
+        //console.log('dx, dy', dx, dy);
+        //console.log('old Tx, Ty', T.x, T.y);
+
+        //console.log(T.scale, newScale, dx, dy);
+
+        // T.x = (T.x/T.scale)*newScale;
+        // T.y = (T.y/T.scale)*newScale;
+
+        console.log('F1', T.scale, newScale, T.x, T.y);
+
+        //console.log('new Tx, Ty', T.x, T.y);
 
         T.x += dx;
         T.y += dy;
+
+
+        T.x = round(T.x);
+        T.y = round(T.y);
+
+        console.log('F2', T.scale, newScale, T.x, T.y);
 
         T.scale = newScale;
         
@@ -210,11 +235,19 @@
         );
     }
 
+    function round(v) {
+        var p = 10000;
+        return Math.round(v*p)/p;
+    }
+
     setTransform(T.x, T.y, T.px, T.py, T.scale);
 
     var swipe = new webit.swipe($el.get(0), {disablePinch: true});
     swipe.on('start', function(t){
-        
+        startTouchCoords = {
+            x: t.x,
+            y: t.y
+        }
         positionPin(t.x - viewportOffset.left, t.y - viewportOffset.top)
     })
 
@@ -234,8 +267,14 @@
         T.y = parseInt(ev.target.value, 10);
         setTransform(T.x, T.y, T.px, T.py, T.scale);
     })
-    $(document).on('click', '[name=setnewscale]', function(ev){
+    $(document).on('change', '[name=newscale]', function(ev){
         ev.preventDefault();
+        $('.newscale').html(parseFloat(ev.target.value));
+        setNewScale(parseFloat(ev.target.value))
+    })
+    $(document).on('change', '[name=setnewscale]', function(ev){
+        ev.preventDefault();
+        
         setNewScale(parseFloat($('[name=newscale]').val()))
     })
     $(document).on('click', '[name=setoffsets]', function(ev){
