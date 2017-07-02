@@ -11,29 +11,12 @@
         height: 100%;
     }
     .block-c {
-        margin: 200px auto 0;
-        width: 300px;
-        height: 300px;
+        margin: 20px auto 0;
+        width: 700px;
+        height: 600px;
         border: 3px solid green;
         position: relative;
-    }
-    .block-c:after {
-        content: ' ';
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        left: 104px;
-        width: 0;
-        border-left: 2px solid green;
-    }
-    .block-c:before {
-        content: ' ';
-        position: absolute;
-        top: 104px;
-        left: 0;
-        right: 0;
-        height: 0;
-        border-top: 2px solid green;
+        overflow: hidden;
     }
     .block {
         position: absolute;
@@ -41,65 +24,23 @@
         right: 0;
         top: 0;
         bottom: 0;
-        border: 2px solid red;
         box-sizing: border-box;
         transform-origin: 0 0;
         z-index: 100;
-    }
-    .block:before,
-    .block:after {
-        content: ' ';
-        position: absolute;
-        display: block;
-        width: 8px;
-        height: 8px;
-        overflow: hidden;
-    }
-    .block:before {
-        background: pink;
-        top: 100px;
-        left: 100px;
-    }
-    .block:after {
-        background: blue;
-        top: 250px;
-        left: 50px;
-    }
-    .m {
-        position: absolute;
-        top: 0;
-        right: 0;
-        font-size: 8px;
-        text-align: right;
+        background-image:url(https://c1.staticflickr.com/1/473/32241479046_149a370254_k.jpg);
+        background-repeat: no-repeat;
+        background-size: contain;
+        background-position: center;
     }
     .log {
         position: absolute;
-        left: 0;
-        top: 90px;
-    }
-    .b1 {
-        position: absolute;
-        left: 0;
-        top: 0;
-    }
-    .b2 {
-        position: absolute;
-        left: 0;
-        top: 30px;
-    }
-    .b3 {
-        position: absolute;
-        left: 0;
-        top: 60px;
+        left: 4px;
+        top: 4px;
     }
     </style>
 </head>
 <body>
-    <button class="b1">Toggle scale</button>
-    <button class="b2">Toggle xy</button>
-    <button class="b3">Toggle all</button>
     <div class="block-c">
-        <div class="m"></div>
         <div class="block"></div>
     </div>
     <div class="log"></div>
@@ -107,102 +48,35 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
     <script type="text/javascript" src="../swipe.js"></script>
     <script>
-    var $log, $el, el;
-    var startPos = {x: 0,y: 0}, currentOffset, pinchDistance, startPinch1, isStarted=false, t1, t2;
-
-
-    var x, y, scale;
-    var currentX = 0, currentY = 0, currentScale=1;
     
-    $el = $('.block');
-    el = $el.get(0);
-    $log = $('.log');
+    var $el = $('.block'), $log = $('.log'), isStarted=false, logStack = [], currentScale=0, 
+        T = {scale: 1, x: 0, y: 0, mx: 0, my: 0}
 
-    $('.block').css('transform', 'scale('+currentScale+')');
-
-    var $m = $('.m');
-
-
-    var toggledScale = false;
-    $(document).on('click', '.b1', function(ev){
-        ev.preventDefault();
-
-        if (toggledScale) {
-            $(el).css('transform', 'translate('+currentX+'px,'+currentY+'px) scale('+currentScale+')');      
-        }
-        else {
-            $(el).css('transform', 'translate('+currentX+'px,'+currentY+'px) scale(1)');
-        }
-
-        toggledScale = !toggledScale;
-    })
-
-
-    var toggledXY = false;
-    $(document).on('click', '.b2', function(ev){
-        ev.preventDefault();
-
-        if (toggledXY) {
-            $(el).css('transform', 'translate('+currentX+'px,'+currentY+'px) scale('+currentScale+')');      
-        }
-        else {
-            $(el).css('transform', 'translate(0,0) scale('+currentScale+')');      
-        }
-
-        toggledXY = !toggledXY;
-    })
-
-
-    var toggledAll = false;
-    $(document).on('click', '.b3', function(ev){
-        ev.preventDefault();
-
-        if (toggledAll) {
-            $(el).css('transform', 'translate('+currentX+'px,'+currentY+'px) scale('+currentScale+')');      
-        }
-        else {
-            $(el).css('transform', 'translate(0,0) scale(1)');      
-        }
-
-        toggledAll = !toggledAll;
-    })
-
-
-    function r(v) {
-        return Math.round(v * 1000)/1000;
-    }
-    function setStats(scale, x, y, t1) {
-        var d = [];
-        
-        d.push('scale:'+r(scale));
-        d.push('x:'+r(x));
-        d.push('y:'+r(y));
-        if (t1) {
-            d.push('t1fx:'+r(t1.fx));
-            d.push('t1fy:'+r(t1.fy));
-        }
-
-        $m.html(d.join('<br />'));
-    }
-    setStats(currentScale, currentX, currentY, t1);
-
-    // Elementa offsets dokumentā. Pēc šitā tiks kalkulātes touch pozīcijas elementā
-    // lai neatkarīgi no tā, kurā vietā elements ir dokumentā touch pozīcijas vienmēr
-    // būtu relatīvas pret elementu, kurā notiek touch
     var elOffset = $el.offset();
+    
+    function setTransform(x, y, mx, my, scale) {
+        $el.css('transform', 'translate('+(x+mx)+'px,'+(y+my)+'px) scale('+scale+')')
+    }
 
-    var logStack = [];
+    function isZoomed() {
+        return T.scale > 1
+    }
+
+    function maybeSlowDown(v, doit) {
+        if (doit) {
+            return v*0.15;
+        }
+        return v;
+    }
+
+
     function log() {
         //return;
-
-
         
         logStack.push(Array.prototype.slice.call(arguments).join(' ')+'<br />');
         if (logStack.length > 20) {
             logStack.shift();
         }
-
-
 
         $log.html(logStack.join(''));
     }
@@ -210,66 +84,14 @@
     function position() {
         requestAnimationFrame(function(){
             if (isStarted) {
-                _p();
-                position();
+                setTransform(T.x, T.y, T.mx, T.my, T.scale);
             }
         })
     }
 
-    function _p() {
-        if (currentOffset) {
-            
-            // Ja ir pinch, tad pārrēķinām scale
-            if (pinchDistance) {
-                scale = (pinchDistance.current/pinchDistance.first)*currentScale;    
-            }
-            else {
-                scale = currentScale;
-            }
-
-            if (t1) {
-                
-                // Aprēķinām x offset, kuru rada scale
-                // Vajag, lai elements paliek tur pat, kur notika pirmais touch
-                // Zem pirksta ir tā pati vieta
-                // Tā kā transform-origin ir top left stūris, tad šie ofseti ir negatīvajā uz augšu vai kreisi
-                var xo = (currentX/currentScale)*scale;
-                var yo = (currentY/currentScale)*scale;
-                scaleOffsetX = (t1.fx - (t1.fx*scale));
-                scaleOffsetY = (t1.fy - (t1.fy*scale));
-
-                // scaleOffsetX = 0;
-                // scaleOffsetY = 0;
-
-                log('a', xo, yo);
-
-                // scaleOffsetX += xo;
-                // scaleOffsetY += yo;
-
-
-
-                x = scaleOffsetX + xo;
-                y = scaleOffsetY + yo;
-
-
-                //x += dx * scale;
-                //y += dy * scale;
-
-
-                // x = currentX + x;
-                // y = currentY + y;
-            }
-            else {
-                //log('bbb', currentOffset.x, currentOffset.y);
-                x = currentX + currentOffset.x;
-                y = currentY + currentOffset.y;
-            }
-            
-
-            setStats(scale, x, y, t1);
-            $(el).css('transform', 'translate('+x+'px,'+y+'px) scale('+scale+')');
-        }
-    }
+    
+        
+    
 
     var swipe = new webit.swipe($el.get(0), {disablePinch: true})
         .on('start', function(t){
@@ -277,61 +99,60 @@
             //log('start');
         })
         .on('end', function(t){
+            T.x += T.mx;
+            T.y += T.my;
+
+            T.mx = 0;
+            T.my = 0;
+
+            T.x = T.x > 0 ? 0 : T.x;
+            T.y = T.y > 0 ? 0 : T.y;
+
+            setTransform(T.x, T.y, T.mx, T.my, T.scale);
+
+            log('end');
+
             isStarted = false;
-
-            currentX = x;
-            currentY = y;
-
-            currentOffset = null;
-
-            //log('end');
         })
         .on('move', function(t){
-            currentOffset = {
-                x: t.offset.x,
-                y: t.offset.y
-            }
-
+            // Ļaujam move tikai, ja ir iezoomots
+            // if (!isZoomed()) {
+            //     return;
+            // }
+            
+            
+            T.mx = maybeSlowDown(t.offset.x, T.x + T.mx > 0);
+            T.my = maybeSlowDown(t.offset.y, T.y + T.my > 0);
+            
             position();
         })
         .on('pinchstart', function(t){
-            //log('pinchstart', currentScale, currentX, currentY);
+            currentScale = T.scale;
+            log('pinchstart');
         })
         .on('pinchend', function(){
-            //log('pinchend')
-
-            currentScale = scale;
-            //startPinch1 = undefined;
-            t1 = undefined;
-            t2 = undefined;
-            pinchDistance = undefined;
-
-            //log('pinchend', currentScale, currentX, currentY);
+            log('pinchend');
         })
         .on('pinchmove', function(t){
-            pinchDistance = {
-                first: t.first.distance,
-                current: t.current.distance
-            }
+            
+            var px = t.first.center.x - elOffset.left;
+            var py = t.first.center.y - elOffset.top;
 
-            // Pirmā pinch touch koordinātes
-            t1 = {
-                fx: t.first.x1 - elOffset.left,
-                fy: t.first.y1 - elOffset.top,
+            // var px = t.first.x1 - elOffset.left;
+            // var py = t.first.y1 - elOffset.top;
 
-                cx: t.current.x1 - elOffset.left,
-                cy: t.current.y1 - elOffset.top,
-            }
+            var newScale = (t.current.distance/t.first.distance)*currentScale;
+            var dx = px*(T.scale - newScale);
+            var dy = py*(T.scale - newScale);
 
+            T.x += dx;
+            T.y += dy;
+            T.scale = newScale;
 
-            t2 = {
-                fx: t.first.x2 - elOffset.left,
-                fy: t.first.y2 - elOffset.top,
+            T.x = T.x > 0 ? 0 : T.x;
+            T.y = T.y > 0 ? 0 : T.y;
 
-                cx: t.current.x2 - elOffset.left,
-                cy: t.current.y2 - elOffset.top,
-            }
-
+            position();
         });
 
     
