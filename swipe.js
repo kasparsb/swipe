@@ -347,16 +347,31 @@
 
         formatPinch: function(x1, x2, y1, y2) {
             return {
+                // Pirmais touch punkts
                 x1: x1,
-                x2: x2,
                 y1: y1,
+
+                // Otrais touch punkts
+                x2: x2,
                 y2: y2,
+
                 width: Math.abs(x1-x2),
                 height: Math.abs(y1-y2),
+
                 // Atālums starp touchiem. Hipotenūza, kur width un height ir taisnleņķa katetes
                 // Aprēķinām pēc pitagora teorēmas distance = sqrt(pow(width, 2) + pow(height, 2))
-                distance: Math.sqrt(Math.pow(Math.abs(x1-x2), 2) + Math.pow(Math.abs(y1-y2), 2))
+                distance: Math.sqrt(Math.pow(Math.abs(x1-x2), 2) + Math.pow(Math.abs(y1-y2), 2)),
+
+                // Pinch centrs
+                center: {
+                    x: this.calcMid(x1, x2),
+                    y: this.calcMid(y1, y2)
+                }
             }
+        },
+
+        calcMid: function(p1, p2) {
+            return p1 < p2 ? (p2-p1)/2+p1 : (p1-p2)/2+p2;
         },
 
         formatMovement: function() {
