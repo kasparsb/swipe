@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en-EN" prefix="og: http://ogp.me/ns#">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no">
+    <style>
+    html,
+    body {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+    }
+    .block-c {
+        margin: 20px auto 0;
+        max-width: 700px;
+        height: 200px;
+        border: 3px solid green;
+        box-sizing: border-box;
+        position: relative;
+        overflow: hidden;
+    }
+    .block {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        box-sizing: border-box;
+        transform-origin: 0 0;
+        z-index: 100;
+    }
+    .log {
+        position: absolute;
+        left: 4px;
+        top: 4px;
+    }
+    </style>
+</head>
+<body>
+    <div class="block-c">
+        <div class="block"></div>
+    </div>
+    <div class="log"></div>
+
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script type="text/javascript" src="../swipe.js"></script>
+    <script>
+    
+    var $el = $('.block'), $log = $('.log'), logStack = [];
+    
+    function log() {
+        logStack.push(Array.prototype.slice.call(arguments).join(' ')+'<br />');
+        if (logStack.length > 20) {
+            logStack.shift();
+        }
+
+        $log.html(logStack.join(''));
+    }
+
+    var swipe = new webit.swipe($el.get(0))
+        .on('tap', function(t){
+            log('tap');
+        })
+        .on('doubletap', function(t){
+            log('doubletap');
+        });
+
+    
+    </script>
+</body>
+</html>

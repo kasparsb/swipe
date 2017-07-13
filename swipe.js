@@ -42,7 +42,12 @@
         this.el = el;
 
         this.events = this.prepareEvents(
-            ['swipe', 'move', 'start', 'end', 'pinchstart', 'pinchend', 'pinchmove', 'touchend', 'touchmove']
+            [
+                'swipe', 'move', 'start', 'end', 
+                'pinchstart', 'pinchend', 'pinchmove', 
+                'touchend', 'touchmove',
+                'tap', 'doubletap'
+            ]
         );
 
         // Apply configuration
@@ -81,6 +86,21 @@
         };
 
         /**
+         * Taps logs. Katram touch eventam piereģistrējam sākuma un beigu laiku
+         * Pēc tam analizējam taps ilgumu un meklējam starp tiem tap vai double Tap
+         * 
+         * Reģistrējot pārbaudam vai events ar norādīt id ir reģistrēts. Ja nav tad liekam iekšā
+         * un piereģistrējam ienākšanas laiku
+         * 
+         * Atreģistrējot meklējam eventu pēc id, kuram nav endTime
+         * 
+         * Tap logu turam apmēram 5 ierakstu garu. Vecākos ierakstus metam ārā
+         */
+        this.tapsLog = [];
+        this.tapsLogLength = 0;
+        this.tapsLogExecuteTimeout = 0;
+
+        /**
          * Is touch events supported
          * This will be determined when first touchstart event fires
          */
@@ -111,6 +131,8 @@
             var mthis = this;
 
             var start = function(ev) {
+                clearTimeout(mthis.tapsLogExecuteTimeout);
+
                 // Reģistrēti tiek tikai tie touchi, kuri nāk no iekonfigurētā elementa
                 mthis.registerTouches(ev);
 
@@ -127,6 +149,11 @@
                 }
 
                 mthis.unregisterTouches(ev);
+
+                // Pārbaudām vai var palaist tap vai double tap eventus
+                mthis.tapsLogExecuteTimeout = setTimeout(function(){
+                    mthis.maybeFireTapping();
+                }, 120)
             }
 
             var move = function(ev) {
@@ -295,6 +322,33 @@
 
                 // retranslate pinch
                 this.maybeFirePinchMove();
+            }
+        },
+
+        /**
+         * Pārbaudām vai var palaist tap vai doubletap eventus
+         */
+        maybeFireTapping: function() {
+            var t = 0;
+
+            for (var i = 0; i < this.tapsLogLength; i++) {
+                if (this.tapsLog[i].executed) {
+                    continue;
+                }
+
+                if (this.tapsLog[i].duration < this._config.tapMaxDuration) {
+                    this.tapsLog[i].executed = true;
+                    t++;
+                }
+            }
+
+            switch (t) {
+                case 2: 
+                    this.fire('doubletap');
+                    break;
+                case 1: 
+                    this.fire('tap');
+                    break;
             }
         },
 
@@ -600,6 +654,9 @@
                 return false;
             }
 
+            // Reģistrējam tap
+            this.registerTapLog(touch.identifier);
+
             
             // Update
             if (this.isTouchRegistered(touch)) {
@@ -617,6 +674,11 @@
         },
 
         unregisterTouch: function(identifier) {
+
+            // Atreģistrējam tap
+            this.unregisterTapLog(identifier);
+
+
             if (typeof this.touches[identifier] != 'undefined') {
                 delete this.touches[identifier];
 
@@ -671,6 +733,42 @@
                 x: typeof ev.pageX == 'undefined' ? ev.x : ev.pageX,
                 y: typeof ev.pageY == 'undefined' ? ev.y : ev.pageY,
                 t: new Date().getTime()
+            }
+        },
+
+        /**
+         * Reģistrējam tap logu. Piereģistrējam touch pēc tā id un piereģistrējam tā sākuma laiku
+         * @param string Touch identifikators
+         */
+        registerTapLog: function(identifier) {
+            this.tapsLog.push({
+                identifier: identifier,
+                startTime: new Date().getTime(),
+                endTime: undefined,
+                duration: undefined,
+                executed: false
+            });
+            this.tapsLogLength++;
+
+            if (this.tapsLogLength > 5) {
+                this.tapsLog.shift();
+                this.tapsLogLength--;
+            }
+        },
+
+        /**
+         * Atgreģistrējam tap. Uzliekam tap end laiku pēc touch id
+         * Tā lai varam pēc tam izrēķināt cik ilgs ir bijis touch
+         */
+        unregisterTapLog: function(identifier) {
+            for (var i = 0; i < this.tapsLogLength; i++) {
+                if (this.tapsLog[i].identifier == identifier && !this.tapsLog[i].endTime) {
+                    
+                    this.tapsLog[i].endTime = new Date().getTime();
+                    
+                    // Tap ilgums
+                    this.tapsLog[i].duration = this.tapsLog[i].endTime - this.tapsLog[i].startTime;
+                }
             }
         },
 
@@ -780,9 +878,14 @@
          * Set configuration parameters
          */
         config: function(config) {
+            if (typeof config == 'undefined') {
+                config = {};
+            }
+            
             function formatValue(value, type) {
                 switch (type) {
                     case 'int': return parseInt(value, 10);
+                    case 'boolean': return (value ? true : false);
                     default: return value
                 }
             }
@@ -798,7 +901,9 @@
                 maxHeight: {value: false, type: 'int'},
                 maxDuration: {value: false, type: 'int'},
 
-                disablePinch: false
+                disablePinch: {value: false, type: 'boolean'},
+
+                tapMaxDuration: {value: 140, type: 'int'}
             }
 
             // Init empty config
