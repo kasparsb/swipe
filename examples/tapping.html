@@ -59,10 +59,10 @@
 
     var swipe = new webit.swipe($el.get(0))
         .on('tap', function(t){
-            log('tap');
+            log('tap', t.x, t.y);
         })
         .on('doubletap', function(t){
-            log('doubletap');
+            log('doubletap', t.x, t.y);
         });
 
     
