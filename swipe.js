@@ -243,6 +243,10 @@
          */
         _start: function(ev) {
 
+            if (this._config.alwaysPreventTouchStart) {
+                this.preventEvent(ev);
+            }
+
             // Touch stāvoklis pašā sākumā
             this.startTouches = this.getTouches();
 
@@ -952,6 +956,13 @@
                 maxDuration: {value: false, type: 'int'},
 
                 disablePinch: {value: false, type: 'boolean'},
+
+                /**
+                 * Prevent any movement. Šis notiek touchstart eventā
+                 * Šis palīdz iOS gadījumā, kad neskatoties uz prevent move
+                 * lapa tā pat dabū skrolēties ar elastic
+                 */
+                alwaysPreventTouchStart: {value: false, type: 'boolean'},
 
                 tapMaxDuration: {value: 140, type: 'int'}
             }
