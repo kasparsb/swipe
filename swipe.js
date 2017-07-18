@@ -677,14 +677,13 @@
                 return false;
             }
 
-            // Reģistrējam tap
-            this.registerTapLog(touch);
-
-            
             // Update
             if (this.isTouchRegistered(touch)) {
                 this.touches[touch.identifier] = touch;
                 this.touches[touch.identifier].touchedElement = touchedElement;
+
+                // Reģistrējam tap
+                this.registerTapLog(this.touches[touch.identifier]);
 
                 return false;
             }
@@ -692,6 +691,9 @@
             // Insert new
             this.touches[touch.identifier] = touch;
             this.touches[touch.identifier].touchedElement = touchedElement;
+
+            // Reģistrējam tap
+            this.registerTapLog(this.touches[touch.identifier]);
 
             return true;
         },
