@@ -51,6 +51,8 @@
         // Apply configuration
         this.config(config);
 
+        this.setTouchAction(this._config.direction);
+
         // Visi reģistrētie touchi, pēc to identifikatoriem
         this.touches = {};
         // Piereģistrēto touch skaits
@@ -240,6 +242,7 @@
          * Touch start. When touch starts or when mouse down
          */
         _start: function(ev) {
+
             // Touch stāvoklis pašā sākumā
             this.startTouches = this.getTouches();
 
@@ -310,8 +313,6 @@
          */
         _move: function(ev) {
             
-
-            // Check for startTouch when fired mousemove event
             if (this.startTouches) {
 
                 // If configured to disable pinch to zoom
@@ -469,13 +470,14 @@
         },
 
         getFormattedDirection: function() {
-            switch (this._config.direction) {
-                case 'horizontal':
-                    return this.getHorizontalDirection();
-                case 'vertical':
-                    return this.getVerticalDirection();
-                default:
-                    return this.getDirection();
+            if (this.isDirection(this._config.direction, 'horizontal') || this.isDirection(this._config.direction, 'vertical')) {
+                return this.getDirection();
+            }
+            else if (this.isDirection(this._config.direction, 'horizontal')) {
+                return this.getHorizontalDirection();
+            }
+            else if (this.isDirection(this._config.direction, 'vertical')) {
+                return this.getHorizontalDirection();
             }
         },
 
@@ -498,14 +500,14 @@
              */
             
             // Swipe direction
-            if (this._config.direction) {
+            if (this._config.direction.length > 0) {
                 
                 // Uzstādām pirmo detektēto swipe virzienu
                 if (!this.moveDirection) {
                     this.moveDirection = this.getMoveDirection();
                 }
 
-                if (this.moveDirection != this._config.direction) {
+                if (!this.isDirection(this._config.direction, this.moveDirection)) {
                     return false;
                 }
             }
@@ -910,17 +912,36 @@
             if (typeof config == 'undefined') {
                 config = {};
             }
-            
-            function formatValue(value, type) {
+
+            function formatByType(value, type) {
                 switch (type) {
                     case 'int': return parseInt(value, 10);
                     case 'boolean': return (value ? true : false);
                     default: return value
                 }
             }
+            
+            function formatValue(value, config) {
+                if (typeof config.multiple == 'undefined') {
+                    config.multiple = false;
+                }
+
+                if (config.multiple) {
+                    value = value.split(' ');
+                    for (var i = 0; i < value.length; i++) {
+                        value[i] = formatByType(value[i], config.type);
+                    }
+                }
+                else {
+                    value = formatByType(value, config.type)
+                }
+
+                return value;
+            }
 
             var defConfig = {
-                direction:  {value: '', type: 'string'},
+                // Directions var būt vairāki (vertical horizontal)
+                direction:  {value: ['horizontal', 'vertical'], type: 'string', multiple: true},
 
                 minWidth: {value: false, type: 'int'},
                 minHeight: {value: false, type: 'int'},
@@ -940,20 +961,37 @@
 
             // Append defaults
             for (var p in defConfig) {
-                this._config[p] = typeof config[p] == 'undefined' ? defConfig[p].value : formatValue(config[p], defConfig[p].type);
+                this._config[p] = typeof config[p] == 'undefined' ? defConfig[p].value : formatValue(config[p], defConfig[p]);
+            }
+        },
+
+        setTouchAction: function(direction) {
+            var c = [];
+
+            if (this.isDirection(direction, 'vertical')) {
+                c.push('pan-x');
             }
 
-
+            if (this.isDirection(direction, 'horizontal')) {
+                c.push('pan-y');
+            }
+            
             // Pievienojam touch-action
-            switch (this._config.direction) {
-                case 'horizontal':
-                    this.el.style.touchAction = 'pan-y';
-                    break;
-                case 'vertical':
-                    this.el.style.touchAction = 'pan-x';
-                    break;
-                default: this.el.style.touchAction = 'none';
+            if (c.length > 0) {
+                this.el.style.touchAction = c.join(' ');    
             }
+            else {
+                this.el.style.touchAction = 'none';
+            }
+        },
+
+        isDirection: function(directionsArray, direction) {
+            for (var i = 0; i < directionsArray.length; i++) {
+                if (directionsArray[i] == direction) {
+                    return true
+                }
+            }
+            return false;
         },
 
         /**
