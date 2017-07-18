@@ -49,7 +49,11 @@
     var $el = $('.block'), $log = $('.log'), logStack = [];
     
     function log() {
-        logStack.push(Array.prototype.slice.call(arguments).join(' ')+'<br />');
+        var arguments = Array.prototype.slice.call(arguments);
+        
+        console.log(arguments);
+
+        logStack.push(arguments.join(' ')+'<br />');
         if (logStack.length > 20) {
             logStack.shift();
         }
@@ -59,10 +63,10 @@
 
     var swipe = new webit.swipe($el.get(0))
         .on('tap', function(t){
-            log('tap', t.x, t.y);
+            log('tap', t.x, t.y, t.touchedElement);
         })
         .on('doubletap', function(t){
-            log('doubletap', t.x, t.y);
+            log('doubletap', t.x, t.y, t.touchedElement);
         });
 
     
