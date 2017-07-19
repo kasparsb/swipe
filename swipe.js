@@ -156,7 +156,7 @@
                     mthis.tapsLogExecuteTimeout = setTimeout(function(){
                         // Pārbaudām vai var palaist tap vai double tap eventus
                         mthis.maybeFireTapping();
-                    }, 120)    
+                    }, 200)    
                 }
                 else {
                     // Pārbaudām vai var palaist tap vai double tap eventus
@@ -363,7 +363,7 @@
                     continue;
                 }
 
-                if (this.tapsLog[i].duration < this._config.tapMaxDuration) {
+                if (this.tapsLog[i].duration > this._config.tapMinDuration && this.tapsLog[i].duration < this._config.tapMaxDuration) {
                     this.tapsLog[i].executed = true;
                     lastTouch = this.tapsLog[i].touch;
                     t++;
@@ -964,7 +964,8 @@
                  */
                 alwaysPreventTouchStart: {value: false, type: 'boolean'},
 
-                tapMaxDuration: {value: 140, type: 'int'}
+                tapMaxDuration: {value: 200, type: 'int'},
+                tapMinDuration: {value: 40, type: 'int'}
             }
 
             // Init empty config
