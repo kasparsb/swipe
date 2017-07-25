@@ -32,7 +32,7 @@
     .log {
         position: absolute;
         left: 4px;
-        top: 4px;
+        top: 224px;
     }
     </style>
 </head>
@@ -58,15 +58,18 @@
             logStack.shift();
         }
 
-        $log.html(logStack.join(''));
+        $log.html('');
+        for (var i = logStack.length; i >= 0; i--) {
+            $log.append(logStack[i]);
+        }
     }
 
     var swipe = new webit.swipe($el.get(0))
         .on('tap', function(t){
-            log('tap', t.x, t.y, t.touchedElement);
+            log('tap', Math.round(t.x), Math.round(t.y));
         })
         .on('doubletap', function(t){
-            log('doubletap', t.x, t.y, t.touchedElement);
+            log('doubletap', Math.round(t.x), Math.round(t.y));
         });
 
     
