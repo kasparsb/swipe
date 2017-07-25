@@ -156,7 +156,7 @@
                     mthis.tapsLogExecuteTimeout = setTimeout(function(){
                         // Pārbaudām vai var palaist tap vai double tap eventus
                         mthis.maybeFireTapping();
-                    }, 200)    
+                    }, mthis._config.doubletapWaitTimeout)
                 }
                 else {
                     // Pārbaudām vai var palaist tap vai double tap eventus
@@ -964,8 +964,9 @@
                  */
                 alwaysPreventTouchStart: {value: false, type: 'boolean'},
 
+                doubletapWaitTimeout: {value: 480, type: 'int'},
                 tapMaxDuration: {value: 200, type: 'int'},
-                tapMinDuration: {value: 40, type: 'int'}
+                tapMinDuration: {value: 10, type: 'int'}
             }
 
             // Init empty config
