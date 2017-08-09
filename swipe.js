@@ -315,6 +315,7 @@
 
                 this.currentTouches = this.getTouches();
 
+                this.clearTapLog();
                 this.trackDuration();
                 this.trackSwipe();
                 this.trackMovment();
@@ -392,7 +393,7 @@
             }
 
 
-            this.tapsLog = {};
+            this.clearTapLog();
             
         },
 
@@ -661,6 +662,9 @@
             return (this.direction == "up" || this.direction == "down");
         },
 
+        /**
+         * Apstrādājam touch registered notikumu
+         */
         handleTouchRegistered: function(touch) {
             this.touchesCount++;
 
@@ -712,9 +716,6 @@
             if (this.isTouchRegistered(touch)) {
                 this.touches[touch.identifier] = touch;
                 this.touches[touch.identifier].touchedElement = touchedElement;
-
-                // Reģistrējam tap
-                //this.registerTapLog(this.touches[touch.identifier]);
 
                 return false;
             }
@@ -804,21 +805,52 @@
          * Tā lai varam pēc tam izrēķināt cik ilgs ir bijis touch
          */
         unregisterTapLog: function(identifier) {
-            if (typeof this.tapsLog[identifier] != 'undefined' && !this.tapsLog[identifier].endTime) {
-                this.tapsLog[identifier].endTime = new Date().getTime();
+            if (typeof this.tapsLog[identifier] != 'undefined') {
+                this.registerTapEnd(this.tapsLog[identifier])
+            }
+        },
+
+        clearTapLog: function() {
+            this.tapsLog = {}
+        },
+
+        registerTapEnd: function(tap) {
+            if (!tap.endTime) {
+                tap.endTime = new Date().getTime();
                     
                 // Tap ilgums
-                this.tapsLog[identifier].duration = this.tapsLog[identifier].endTime - this.tapsLog[identifier].startTime;
+                tap.duration = tap.endTime - tap.startTime;
             }
+        },
+
+        /**
+         * Pārbaudām vai esošajā tapLog ir valīds tap
+         */
+        isValidTapRegistered: function() {
+            var r = false, mthis = this;
+
+            this.each(this.tapsLog, function(tap){
+                
+                if (mthis.validateTap(tap)) {
+                    r = true;
+                }
+
+            })
+
+            return r;
+        },
+
+        validateTap: function(tap) {
+            if (tap.duration > this._config.tapMinDuration && tap.duration < this._config.tapMaxDuration) {
+                return true;
+            }
+            return false;
         },
 
         /**
          * Fire events attached callbacks
          */
         fire: function(eventName, args) {
-            if (eventName == 'tap') {
-                console.log(this.events[eventName]);
-            }
             for (var i in this.events[eventName]) {
                 this.events[eventName][i].apply(this, args);
             }
@@ -1046,6 +1078,14 @@
                 }
             }
             return r;
+        },
+
+        each: function(obj, cb) {
+            for (var name in obj) {
+                if (obj.hasOwnProperty(name)) {
+                    cb(obj[name], name);
+                }
+            }
         },
 
         clone: function(obj) {
