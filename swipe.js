@@ -1012,7 +1012,7 @@
 
                 doubletapWaitTimeout: {value: 530, type: 'int'},
                 tapMaxDuration: {value: 600, type: 'int'},
-                tapMinDuration: {value: 10, type: 'int'}
+                tapMinDuration: {value: 5, type: 'int'}
             }
 
             // Init empty config
