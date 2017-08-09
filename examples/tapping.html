@@ -18,6 +18,7 @@
         box-sizing: border-box;
         position: relative;
         overflow: hidden;
+        transition: all 300ms;
     }
     .block {
         position: absolute;
@@ -28,6 +29,38 @@
         box-sizing: border-box;
         transform-origin: 0 0;
         z-index: 100;
+    }
+    .block:before {
+        content: ' ';
+        position: absolute;
+        display: block;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        top: 0;
+        border: 20px solid green;
+        opacity: 0;
+        transition: all 150ms;
+    }
+    .block:after {
+        content: ' ';
+        display: block;
+        position: absolute;
+        width: 70px;
+        height: 70px;
+        background: red;
+        left: 50%;
+        top: 50%;
+        margin-left: -35px;
+        margin-top: -35px;
+        transition: all 300ms;
+        transform-origin: 50%;
+    }
+    .block-tapped:before {
+        opacity: 1;
+    }
+    .block-doubletapped:after {
+        transform: scale(2);
     }
     .log {
         position: absolute;
@@ -66,11 +99,19 @@
 
     var swipe = new webit.swipe($el.get(0))
         .on('tap', function(t){
+
+            $el.toggleClass('block-tapped');
+
             log('tap', Math.round(t.x), Math.round(t.y));
         })
         .on('doubletap', function(t){
+
+            $el.toggleClass('block-doubletapped');
+
             log('doubletap', Math.round(t.x), Math.round(t.y));
         });
+
+    log('doubletapwait', swipe._config.doubletapWaitTimeout)
 
     
     </script>
