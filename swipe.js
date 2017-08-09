@@ -344,57 +344,59 @@
          * Pārbaudām vai var palaist tap vai doubletap eventus
          */
         maybeFireTapping: function() {
-            
             clearTimeout(this.tapsLogExecuteTimeout);
 
-            var t = 0;
-            for (var identifier in this.tapsLog) {
-                if (!this.tapsLog.hasOwnProperty(identifier)) {
-                    continue;
-                }
+            if (this.isEventsRegistered('doubletap')) {
+                this.maybeFireDoubleTap(this.getValidTapRegistered());
+            }
+            else {
+                this.maybeFireSingleTap(this.getValidTapRegistered());
+            }
 
-                // Pārbaudām vai ir bijis tap
-                if (this.tapsLog[identifier].duration > this._config.tapMinDuration && this.tapsLog[identifier].duration < this._config.tapMaxDuration) {
-                    
-                    t++;   
-                    
-                    
-                }
+            this.clearTapLog();            
+        },
+
+        maybeFireDoubleTap: function(tap) {
+            if (!tap) {
+                return;
             }
 
             var mthis = this;
-            if (t > 0) {
-                if (this.isEventsRegistered('doubletap')) {
-                    
-                    
-                    if (this.waitForDoubleTap) {
-                        this.fire('doubletap', [this.tapsLog[identifier].touch])
-                        this.waitForDoubleTap = false;
-                    }
-                    else {
-                        // Gaidām nākošo tap
-                        this.waitForDoubleTap = true;
-                        this.tapsLogExecuteTimeout = setTimeout((function(touch){
-                            
-                            return function() {
-                                mthis.waitForDoubleTap = false;
-                                mthis.fire('tap', [touch])
-                            }
-                            
 
-                        })(this.tapsLog[identifier].touch), this._config.doubletapWaitTimeout)
+            if (this.waitForDoubleTap) {
+                this.fire('doubletap', [tap.touch])
+                this.waitForDoubleTap = false;
+            }
+            else {
+                // Gaidām nākošo tap
+                this.waitForDoubleTap = true;
+                this.tapsLogExecuteTimeout = setTimeout((function(touch){
+                    
+                    return function() {
+                        mthis.waitForDoubleTap = false;
+
+                        mthis.fire('tap', [touch])
                     }
 
-                    
-                }
-                else {
-                    this.fire('tap', [this.tapsLog[identifier].touch])
-                }
+                })(tap.touch), this._config.doubletapWaitTimeout)
+
+
+                /**
+                 * @todo Te vajadzētu kaut kādu pseido little bit before tap, jo
+                 * uz ios doubletapWaitTimeout ir tāds pats kā šeit iekonfigurēts
+                 * bet single tap tomēr izpildās drusku ātrāk. Tas tāpēc, lai interfeiss
+                 * justos atsaucīgāks. Savukārt ļoti īsu doubletapWaitTimeout nevar taisīt,
+                 * jo kādam, kuram nav veikli pirksti būs grūti uztaisīt doubleTap
+                 */
+            }
+        },
+
+        maybeFireSingleTap: function(tap) {
+            if (!tap) {
+                return;
             }
 
-
-            this.clearTapLog();
-            
+            this.fire('tap', [tap.touch])
         },
 
         maybePreventPinch: function(ev) {
@@ -824,20 +826,20 @@
         },
 
         /**
-         * Pārbaudām vai esošajā tapLog ir valīds tap
+         * Atgriež pēdējo valīdo tap no tapLog
          */
-        isValidTapRegistered: function() {
-            var r = false, mthis = this;
+        getValidTapRegistered: function() {
+            var validTap = false, mthis = this;
 
             this.each(this.tapsLog, function(tap){
                 
                 if (mthis.validateTap(tap)) {
-                    r = true;
+                    validTap = tap;
                 }
 
             })
 
-            return r;
+            return validTap;
         },
 
         validateTap: function(tap) {
@@ -1008,8 +1010,8 @@
                  */
                 alwaysPreventTouchStart: {value: false, type: 'boolean'},
 
-                doubletapWaitTimeout: {value: 300, type: 'int'},
-                tapMaxDuration: {value: 400, type: 'int'},
+                doubletapWaitTimeout: {value: 530, type: 'int'},
+                tapMaxDuration: {value: 600, type: 'int'},
                 tapMinDuration: {value: 10, type: 'int'}
             }
 
