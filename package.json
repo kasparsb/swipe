@@ -16,8 +16,5 @@
   "bugs": {
     "url": "https://github.com/kasparsb/swipe/issues"
   },
-  "homepage": "https://github.com/kasparsb/swipe",
-  "devDependencies": {
-    "jquery": "^2.1.4"
-  }
+  "homepage": "https://github.com/kasparsb/swipe"
 }
