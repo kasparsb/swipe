@@ -131,7 +131,7 @@
 
             var start = function(ev) {
                 // Reģistrēti tiek tikai tie touchi, kuri nāk no iekonfigurētā elementa
-                mthis.registerTouches(ev);
+                mthis.registerTouches(ev, true);
 
                 mthis.isTouchedValidElement = mthis.touchesCount > 0;
                 if (mthis.isTouchedValidElement) {
@@ -151,9 +151,13 @@
                 mthis.maybeFireTapping();
             }
 
+            /**
+             * @param touchedElement is used only on case of mouse
+             * it provides custom element, not the one from current touch
+             */
             var move = function(ev) {
                 mthis.registerTouches(ev);
-                
+
                 if (mthis.isTouchedValidElement) {
                     mthis._move(ev);
                 }
@@ -192,6 +196,7 @@
 
             var mouseStart = function(ev) {
                 mthis.isMouseDown = mthis.formatTouch(ev);
+
                 if (!mthis.isTouchEvents) {
                     start(ev)   
                 }
@@ -303,7 +308,7 @@
          * Touch is moving. Moving when mouse down
          */
         _move: function(ev) {
-            
+
             if (this.startTouches) {
 
                 // If configured to disable pinch to zoom
@@ -685,16 +690,22 @@
         },
 
         /**
-         * Reģistrējam tikai tos touch, kuri nāk no iekonfigurētā elementa
+         * @param validateTouchedElement Reģistrējam tikai tos touch, kuri nāk no iekonfigurētā elementa
+         * Tas ir vajadzīgs, lai swipe sāktos tikai uz iekofigurēto elementu
+         * Pēc tam, kad notiek move, tad neskatamies uz touched elementu
+         *
+         * changedTouches nesatur to elementu uz kura tagad touch atrodas
+         * elements vienmēr būs tas no kura sākās touch events
+         * Elements, kurš pašlaik ir zem touch jānosaka ar pageX pageY vai kaut kā savādāk
          */
-        registerTouches: function(ev) {
+        registerTouches: function(ev, validateTouchedElement) {
             if (ev.changedTouches) {
                 for (var i = 0; i < ev.changedTouches.length; i++) {
-                    this.registerTouch(this.formatTouch(ev.changedTouches[i]), this.eventTarget(ev.changedTouches[i]));
+                    this.registerTouch(this.formatTouch(ev.changedTouches[i]), this.eventTarget(ev.changedTouches[i]), validateTouchedElement);
                 }
             }
             else {
-                this.registerTouch(this.formatTouch(ev), this.eventTarget(ev));
+                this.registerTouch(this.formatTouch(ev), this.eventTarget(ev), validateTouchedElement);
             }
         },
 
@@ -709,11 +720,14 @@
             }
         },
 
-        registerTouch: function(touch, touchedElement) {
-            if (!this.isTheElement(touchedElement)) {
-                return false;
-            }
+        registerTouch: function(touch, touchedElement, validateTouchedElement) {
 
+            if (validateTouchedElement) {
+                if (!this.isTheElement(touchedElement)) {
+                    return false;
+                }
+            }
+            
             // Update
             if (this.isTouchRegistered(touch)) {
                 this.touches[touch.identifier] = touch;
@@ -748,26 +762,26 @@
          * Get touch object from event
          * We need only x, y coordinates and time of touch
          */
-        getTouch: function(ev) {
-            var t = false;
-            var changedTouches = ev.changedTouches;
+        // getTouch: function(ev) {
+        //     var t = false;
+        //     var changedTouches = ev.changedTouches;
             
-            if (changedTouches) {
-                t = changedTouches[0];
-            }
-            else {
-                t = ev;
-            }
+        //     if (changedTouches) {
+        //         t = changedTouches[0];
+        //     }
+        //     else {
+        //         t = ev;
+        //     }
             
-            t = t ? this.formatTouch(t) : false;
+        //     t = t ? this.formatTouch(t) : false;
 
-            if (t) {
-                // Pieglabājam elementu, uz kura notika touch
-                t.touchedElement = this.eventTarget(ev);
-            }
+        //     if (t) {
+        //         // Pieglabājam elementu, uz kura notika touch
+        //         t.touchedElement = this.eventTarget(ev);
+        //     }
 
-            return t;
-        },
+        //     return t;
+        // },
 
         /**
          * Atgriežam touches kopiju uz doto mirkli
