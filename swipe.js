@@ -195,6 +195,16 @@
             }
 
             var mouseStart = function(ev) {
+                /**
+                 * Right mouse button causes to fire mouseStart but no 
+                 * mouseEnd because of context menu which is fired on
+                 * right mouse click and mouseEnd event is not catched
+                 * So only react to left mouse click
+                 */
+                if (!mthis.isMainMouseButton(ev)) {
+                    return;
+                }
+
                 mthis.isMouseDown = mthis.formatTouch(ev);
 
                 if (!mthis.isTouchEvents) {
@@ -203,6 +213,7 @@
             }
 
             var mouseEnd = function(ev) {
+                console.log('mouseEnd');
                 if (!mthis.isTouchEvents) {
                     end(ev) 
                 }
@@ -1065,6 +1076,21 @@
                 }
             }
             return false;
+        },
+
+        /**
+         * Detect if main (left) button is pressed
+         */
+        isMainMouseButton: function(ev) {
+            if (typeof ev['which'] != 'undefined') {
+                return ev.which == 1; 
+            }
+            else if (typeof ec['button'] != 'undefined') {
+                return ev.button == 0;
+            }
+            else {
+                return true;
+            }
         },
 
         /**
