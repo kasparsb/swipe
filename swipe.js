@@ -213,7 +213,6 @@
             }
 
             var mouseEnd = function(ev) {
-                console.log('mouseEnd');
                 if (!mthis.isTouchEvents) {
                     end(ev) 
                 }
