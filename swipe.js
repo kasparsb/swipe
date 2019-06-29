@@ -868,7 +868,9 @@
 
         validateTap: function(tap) {
             if (tap.duration > this._config.tapMinDuration && tap.duration < this._config.tapMaxDuration) {
-                return true;
+                if (this.isTheElement(tap.touch.touchedElement)) {
+                    return true;
+                }
             }
             return false;
         },
