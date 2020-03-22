@@ -342,6 +342,7 @@
                 // Always retranslate touchmove if there was move
                 this.fireTouchMove();
 
+
                 if (this.isValidMove()) {
                     this.preventEvent(ev);
                     this.validMove = true;
@@ -359,7 +360,13 @@
                     if (this._config.fireMoveOnRequestAnimationFrame) {
                         if (!this.raf) {
                             this.raf = window.requestAnimationFrame(function(r){
-                                mthis.fire('move', [mthis.formatMovement()])
+
+                                // Pārbaudām vai vēl esam move stāvoklī. Iespējams, ka mirklī
+                                // kad izpildās cb vairs nav touch events
+                                if (mthis.startTouches) {
+                                    mthis.fire('move', [mthis.formatMovement()])
+                                }
+
                                 mthis.raf = undefined;
                             })
                         }
@@ -545,9 +552,9 @@
          * There also can be checked, if user is scrolling page
          */
         isValidMove: function() {
-            // Ja swipeLog nav pilns, tad nevaram vēl validēt move
+            // Ja swipeLog nav pilns, tad nevaram vēl validēt move un uzskatām, ka tas ir valid
             if (this.swipeLog.stack.length < 2) {
-                return false;
+                return true;
             }
 
             /**
@@ -955,12 +962,22 @@
             }
         },
 
-        preventEvent: function(ev) {
-            if (ev.preventDefault) {
-                ev.preventDefault();
+        isEventCancelable: function(ev) {
+            if (typeof ev.cancelable != 'undefined') {
+                return ev.cancelable;
             }
-            else {
-                ev.returnValue = false;
+
+            return true;
+        },
+
+        preventEvent: function(ev) {
+            if (this.isEventCancelable(ev)) {
+                if (ev.preventDefault) {
+                    ev.preventDefault();
+                }
+                else {
+                    ev.returnValue = false;
+                }
             }
         },
 
