@@ -34,6 +34,8 @@
 
     var Swipe = function(el, config) {
         this.instanceId = instances++;
+        // Pazīme vai ir uzlikts move requestAnimationFrame
+        this.raf = undefined;
 
 
         // Touch/mouse events will be attaches to body
@@ -319,6 +321,8 @@
          */
         _move: function(ev) {
 
+            var mthis = this;
+
             if (this.startTouches) {
 
                 // If configured to disable pinch to zoom
@@ -347,7 +351,22 @@
                 }
                 
                 if (this.validMove) {
-                    this.fire('move', [this.formatMovement()])
+                    /**
+                     * Vajag iespēju palaist move caur requestAnimationFrame
+                     * Ja pa tiešo pie move ir pieslēgts vizuālā elementa pārvietošana,
+                     * tad pārzimēt elementu uz katru move ir par daudz
+                     */
+                    if (this._config.fireMoveOnRequestAnimationFrame) {
+                        if (!this.raf) {
+                            this.raf = window.requestAnimationFrame(function(r){
+                                mthis.fire('move', [mthis.formatMovement()])
+                                mthis.raf = undefined;
+                            })
+                        }
+                    }
+                    else {
+                        this.fire('move', [this.formatMovement()])
+                    }
                 }
 
                 // retranslate pinch
@@ -1035,6 +1054,11 @@
                  * lapa tā pat dabū skrolēties ar elastic
                  */
                 alwaysPreventTouchStart: {value: false, type: 'boolean'},
+
+                /**
+                 * Move events tiek izpildīts caur requestAnimationFrame nevis uz katru move
+                 */
+                fireMoveOnRequestAnimationFrame: {value: false, type: 'boolean'},
 
                 doubletapWaitTimeout: {value: 530, type: 'int'},
                 tapMaxDuration: {value: 600, type: 'int'},
