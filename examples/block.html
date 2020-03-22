@@ -86,7 +86,9 @@
             }
         }
 
-        swipe = new webit.swipe(el, {})
+        swipe = new webit.swipe(el, {
+            fireMoveOnRequestAnimationFrame: true
+        })
             .on("start", function(t){
                 //console.log('start', window.performance.now());
                 log('start');
@@ -103,7 +105,7 @@
                 currentOffset = null;
             })
             .on("move", function(t){
-                //console.log('move', window.performance.now());
+                console.log('move', window.performance.now());
 
                 currentOffset = t.offset;
 
