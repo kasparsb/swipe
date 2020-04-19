@@ -68,6 +68,8 @@
         // Current touch, when swipe is in process
         this.currentTouches = false;
 
+        // Move x, y offset values
+        this.offset;
         // Swipe width
         this.width;
         // Swipe height
@@ -305,6 +307,14 @@
             this.startTouches = false;
             this.firstMoveTouches = false;
 
+            this.currentTouches = false;
+
+            // Notīrām move vērtības
+            this.duration = undefined;
+            this.offset = undefined;
+            this.width = undefined;
+            this.height = undefined;
+
             if (this.validMove) {
                 this.fire("end", [movement]);
              }
@@ -528,7 +538,7 @@
                 y: this.currentTouches.first().y,
                 touchedElement: this.currentTouches.first().touchedElement,
 
-                speed: this.width / this.duration,
+                speed: isNaN(this.width / this.duration) ? 0 : this.width / this.duration,
                 realDirection: this.direction
             }
         },
