@@ -564,7 +564,7 @@
         isValidMove: function() {
             // Ja swipeLog nav pilns, tad nevaram vēl validēt move un uzskatām, ka tas ir valid
             if (this.swipeLog.stack.length < 2) {
-                return true;
+                return false;
             }
 
             /**
